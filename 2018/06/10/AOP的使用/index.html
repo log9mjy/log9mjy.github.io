@@ -1,0 +1,184 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="jiangyong's blog."><meta name="keywords" content="学习,记录,笔记"><title>springboot-AOP的使用 | 听雨时的忧愁</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">springboot-AOP的使用</h1><a id="logo" href="/.">听雨时的忧愁</a><p class="description">天下武功,唯快不破</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><div id="search-result"></div></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">springboot-AOP的使用</h1><div class="post-meta"><a href="/2018/06/10/AOP的使用/#comments" class="comment-count"></a><p><span class="date">Jun 10, 2018</span><span><a href="/categories/springboot/" class="category">springboot</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><h2 id="1-RequestContextHolder"><a href="#1-RequestContextHolder" class="headerlink" title="1.RequestContextHolder"></a>1.RequestContextHolder</h2><p>在spring mvc中，为了随时都能取到当前请求的request对象，可以通过RequestContextHolder的静态方法getRequestAttributes()获取Request相关的变量，如request, response等。 </p>
+<pre><code class="Java">//两个方法在没有使用JSF的项目中是没有区别的
+RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
+//RequestContextHolder.getRequestAttributes();
+//从session里面获取对应的值
+String str = (String) requestAttributes.getAttribute(&quot;name&quot;,RequestAttributes.SCOPE_SESSION);
+
+HttpServletRequest request = ((ServletRequestAttributes)requestAttributes).getRequest();
+HttpServletResponse response = ((ServletRequestAttributes)requestAttributes).getResponse();
+</code></pre>
+<h2 id="2-注解的使用"><a href="#2-注解的使用" class="headerlink" title="2.注解的使用"></a>2.注解的使用</h2><ul>
+<li><p><strong>@Documented</strong>：注解表明制作javadoc时，是否将注解信息加入文档。如果注解在声明时使用了@Documented，则在制作javadoc时注解信息会加入javadoc。</p>
+</li>
+<li><p>@Target</p>
+<p>：用来说明该注解可以被声明在那些元素之前</p>
+<ul>
+<li>@Target(ElementType.TYPE) //接口、类、枚举、注解</li>
+<li>@Target(ElementType.FIELD) //字段、枚举的常量</li>
+<li>@Target(ElementType.METHOD) //方法</li>
+<li>@Target(ElementType.PARAMETER) //方法参数</li>
+<li>@Target(ElementType.CONSTRUCTOR) //构造函数</li>
+<li>@Target(ElementType.LOCAL_VARIABLE)//局部变量</li>
+<li>@Target(ElementType.ANNOTATION_TYPE)//注解</li>
+<li>@Target(ElementType.PACKAGE) ///包</li>
+</ul>
+</li>
+<li><p>@Retention</p>
+<p>：用来说明该注解类的生命周期。</p>
+<ul>
+<li>@Retention(RetentionPolicy.SOURCE) —— 这种类型的Annotations只在源代码级别保留,编译时就会被忽略</li>
+<li>@Retention(RetentionPolicy.CLASS) —— 这种类型的Annotations编译时被保留,在class文件中存在,但JVM将会忽略</li>
+<li>@Retention(RetentionPolicy.RUNTIME) —— 这种类型的Annotations将被JVM保留,所以他们能在运行时被JVM或其他使用反射机制的代码所读取和使用.</li>
+</ul>
+<pre><code class="java">/**
+ * 登陆用户请求单次限制
+ */
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface SingleRequest {
+    /**
+     * 限定的时间(秒)
+     */
+    int limitTime() default 10;
+}
+</code></pre>
+<h4 id="springboot开启AOP"><a href="#springboot开启AOP" class="headerlink" title="springboot开启AOP"></a>springboot开启AOP</h4><ol>
+<li>添加依赖</li>
+</ol>
+<pre><code>&lt;dependency&gt;    
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;    
+    &lt;artifactId&gt;spring-boot-starter-aop&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre><ol start="2">
+<li>在application.properties中加入配置</li>
+</ol>
+<pre><code>spring.aop.auto=true
+</code></pre><ol start="3">
+<li>定义切面</li>
+</ol>
+<pre><code>@Aspect
+@Component
+public class AopConfiguration {
+
+}
+</code></pre><ol start="4">
+<li>切面内定义切入点，就是执行的条件</li>
+</ol>
+<pre><code>    @Pointcut(&quot;execution(* com.test.service.*.*(..))&quot;)
+    public void executeService()
+    {
+
+    }
+</code></pre><p><code>`</code></p>
+<pre><code> 1）execution：用于匹配子表达式。
+
+        //匹配com.cjm.model包及其子包中所有类中的所有方法，返回类型任意，方法参数任意
+        @Pointcut(&quot;execution(* com.cjm.model..*.*(..))&quot;)
+        public void before(){}
+</code></pre></li>
+</ul>
+<pre><code>    2）within：用于匹配连接点所在的Java类或者包。
+
+          //匹配Person类中的所有方法
+          @Pointcut(&quot;within(com.cjm.model.Person)&quot;)
+          public void before(){}
+
+
+
+          //匹配com.cjm包及其子包中所有类中的所有方法
+
+          @Pointcut(&quot;within(com.cjm..*)&quot;)
+          public void before(){}
+
+
+
+   3） this：用于向通知方法中传入代理对象的引用。
+          @Before(&quot;before() &amp;&amp; this(proxy)&quot;)
+          public void beforeAdvide(JoinPoint point, Object proxy){
+                //处理逻辑
+          }
+
+
+
+    4）target：用于向通知方法中传入目标对象的引用。
+          @Before(&quot;before() &amp;&amp; target(target)
+          public void beforeAdvide(JoinPoint point, Object proxy){
+                //处理逻辑
+          }
+
+
+
+    5）args：用于将参数传入到通知方法中,匹配的字段注入
+          @Before(&quot;before() &amp;&amp; args(age,username)&quot;)
+          public void beforeAdvide(JoinPoint point, int age, String username){
+                //处理逻辑
+          }
+
+    6）@within ：用于匹配在类一级使用了参数确定的注解的类，其所有方法都将被匹配。 
+
+          @Pointcut(&quot;@within(com.cjm.annotation.AdviceAnnotation)&quot;) － 所有被@AdviceAnnotation标注的类都将匹配
+          public void before(){}
+</code></pre><p>  　　</p>
+<pre><code>    7）@target ：和@within的功能类似，但必须要指定注解接口的保留策略为RUNTIME。
+          @Pointcut(&quot;@target(com.cjm.annotation.AdviceAnnotation)&quot;)
+          public void before(){}
+
+
+
+    8）@args ：传入连接点的对象对应的Java类必须被@args指定的Annotation注解标注。
+          @Before(&quot;@args(com.cjm.annotation.AdviceAnnotation)&quot;)
+          public void beforeAdvide(JoinPoint point){
+                //处理逻辑
+          }
+</code></pre><p>  　　</p>
+<pre><code>    9）@annotation ：匹配连接点被它参数指定的Annotation注解的方法。也就是说，所有被指定注解标注的方法都将匹配。
+          @Pointcut(&quot;@annotation(com.cjm.annotation.AdviceAnnotation)&quot;)
+          public void before(){}
+
+    10）bean：通过受管Bean的名字来限定连接点所在的Bean。该关键词是Spring2.5新增的。
+          @Pointcut(&quot;bean(person)&quot;)
+          public void before(){}
+
+    11)@AfterReturning(value = POINT_CUT,returning = &quot;keys&quot;)  
+        public void doAfterReturningAdvice1(JoinPoint joinPoint,Object keys){  
+        logger.info(&quot;第一个后置返回通知的返回值：&quot;+keys);  
+       } 
+</code></pre><pre><code>
+  ##### JoinPoint 常用方法
+
+</code></pre><pre><code> //获取目标方法的参数信息  
+  Object[] obj = joinPoint.getArgs();  
+  //AOP代理类的信息  
+  joinPoint.getThis();  
+  //代理的目标对象  
+  joinPoint.getTarget();  
+  //用的最多 通知的签名  
+  Signature signature = joinPoint.getSignature();  
+  //代理的是哪一个方法  
+  logger.info(&quot;代理的是哪一个方法&quot;+signature.getName());  
+  //AOP代理类的名字  
+  logger.info(&quot;AOP代理类的名字&quot;+signature.getDeclaringTypeName());  
+  //AOP代理类的类（class）信息  
+  signature.getDeclaringType();  
+</code></pre><pre><code>
+  ProceedingJoinPoint常用方法
+
+</code></pre><p>  //执行连接点的方法<br>  public Object proceed() throws Throwable;</p>
+<pre><code>
+  ##### 实例
+
+  切点
+
+  ```Java
+  @Pointcut(&quot;@annotation(com.xb.merchant.aspect.CodeLimit)&quot;)
+  public void sendCode() {
+  }
+</code></pre><pre><code class="Java">  @Around(value = &quot;sendCode()&amp;&amp;args(cellphone)&amp;&amp;@annotation(codeLimit)&quot;, argNames = &quot;joinPoint,cellphone,codeLimit&quot;)
+  public ResultVo codeLimit(ProceedingJoinPoint joinPoint,String cellphone,CodeLimit codeLimit) throws Throwable {
+     //codeLimit获取注解的参数
+     //RequestContextHolder获取request上的参数
+  }
+</code></pre>
+</div><div class="post-copyright"><blockquote><p>原文作者: mjy</p><p>原文链接: <a href="http://blog.moujiangyong.com/2018/06/10/AOP的使用/">http://blog.moujiangyong.com/2018/06/10/AOP的使用/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2018/07/12/队列的使用/" class="pre">队列的使用</a><a href="/2018/06/03/Linux命令/" class="next">Linux命令</a></div><div id="comments"></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-RequestContextHolder"><span class="toc-text">1.RequestContextHolder</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-注解的使用"><span class="toc-text">2.注解的使用</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#springboot开启AOP"><span class="toc-text">springboot开启AOP</span></a></li></ol></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/09/21/JVM 配置常用参数和常用 GC 调优策略(转)/">jvm常用配置(转)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/01/开源项目/">开源项目</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/07/02/Linux安装环境/">Linux安装环境</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/17/String/">String.format()方法的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/30/常用递归的使用/">常用递归的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/23/feign和restTemplate的使用/">okhttp,feign,restTemplate的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/21/Java虚拟机调优/">Java虚拟机调优</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/logback的使用/">springboot-logback的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/21/spring-cloud之权限/">spring-cloud之权限</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/01/spring-cloud之链路追踪/">spring-cloud之链路追踪</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JVM/">JVM</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/http请求/">http请求</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/java8/">java8</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springboot/">springboot</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springcloud/">springcloud</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/前端/">前端</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客/">博客</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/搜索引擎/">搜索引擎</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/笔记/">笔记</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/线程/">线程</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/递归/">递归</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/项目/">项目</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/spring-cloud/" style="font-size: 15px;">spring cloud</a> <a href="/tags/资料/" style="font-size: 15px;">资料</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li></ul></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/baidusitemap.xml">网站地图</a> |  <a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><a href="https://beian.miit.gov.cn " rel="nofollow">蜀ICP备19003737号</a></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>

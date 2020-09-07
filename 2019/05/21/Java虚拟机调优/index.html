@@ -1,0 +1,139 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="jiangyong's blog."><meta name="keywords" content="学习,记录,笔记"><title>Java虚拟机调优 | 听雨时的忧愁</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">Java虚拟机调优</h1><a id="logo" href="/.">听雨时的忧愁</a><p class="description">天下武功,唯快不破</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><div id="search-result"></div></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">Java虚拟机调优</h1><div class="post-meta"><a href="/2019/05/21/Java虚拟机调优/#comments" class="comment-count"></a><p><span class="date">May 21, 2019</span><span><a href="/categories/JVM/" class="category">JVM</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><h2 id="1-jvm运行参数"><a href="#1-jvm运行参数" class="headerlink" title="1.jvm运行参数"></a>1.jvm运行参数</h2><h3 id="标准参数"><a href="#标准参数" class="headerlink" title="标准参数"></a>标准参数</h3><ul>
+<li>-help<br>-version</li>
+</ul>
+<h3 id="x参数"><a href="#x参数" class="headerlink" title="-x参数"></a>-x参数</h3><pre><code>java  -X           ----查看-X所有参数
+
+-Xmixed 混合模式执行 (默认)
+-Xint 仅解释模式执行
+-Xbootclasspath:&lt;用 : 分隔的目录和 zip/jar 文件&gt;
+设置搜索路径以引导类和资源
+-Xbootclasspath/a:&lt;用 : 分隔的目录和 zip/jar 文件&gt;
+附加在引导类路径末尾
+-Xbootclasspath/p:&lt;用 : 分隔的目录和 zip/jar 文件&gt;
+置于引导类路径之前
+-Xdiag 显示附加诊断消息
+-Xnoclassgc 禁用类垃圾收集
+-Xincgc 启用增量垃圾收集
+-Xloggc:&lt;file&gt; 将 GC 状态记录在文件中 (带时间戳)
+-Xbatch 禁用后台编译
+-Xms&lt;size&gt; 设置初始 Java 堆大小
+-Xmx&lt;size&gt; 设置最大 Java 堆大小
+-Xss&lt;size&gt; 设置 Java 线程堆栈大小
+-Xprof 输出 cpu 配置文件数据
+-Xfuture 启用最严格的检查, 预期将来的默认值
+-Xrs 减少 Java/VM 对操作系统信号的使用 (请参阅-Xcheck:jni 对 JNI 函数执行其他检查
+-Xshare:off 不尝试使用共享类数据
+-Xshare:auto 在可能的情况下使用共享类数据 (默认)
+-Xshare:on 要求使用共享类数据, 否则将失败。
+-XshowSettings 显示所有设置并继续
+-XshowSettings:all
+显示所有设置并继续
+-XshowSettings:vm 显示所有与 vm 相关的设置并继续
+-XshowSettings:properties
+显示所有属性设置并继续
+-XshowSettings:locale
+显示所有与区域设置相关的设置并继续
+</code></pre><p>常用：</p>
+<p>-Xms<size> 设置初始 Java 堆大小<br>-Xmx<size> 设置最大 Java 堆大小<br>-Xss<size> 设置 Java 线程堆栈大小</size></size></size></p>
+<h3 id="xx参数"><a href="#xx参数" class="headerlink" title="-xx参数"></a>-xx参数</h3><p>-XX参数也是非标准参数，主要用于jvm的调优和debug操作。</p>
+<pre><code>-Xmx2048m：等价于-XX:MaxHeapSize，设置JVM最大堆内存为2048M。 
+
+-Xms512m：等价于-XX:InitialHeapSize，设置JVM初始堆内存为512M。 
+
+-XX:+PrintFlagsFinal ： 打印参数
+
+</code></pre><h2 id="2-查看参数"><a href="#2-查看参数" class="headerlink" title="2.查看参数"></a>2.查看参数</h2><p>1.查看所有的参数，用法：jinfo -flags &lt;进程id&gt; </p>
+<p>2.通过jps 或者 jps -l 查看java进程</p>
+<p>3.查看class加载统计</p>
+<pre><code>jstat -class 6219
+
+Loaded Bytes Unloaded Bytes Time 
+
+3273   7122.3  0       0.0   3.98 
+</code></pre><pre><code>Loaded：加载class的数量 
+
+Bytes：所占用空间大小 
+
+Unloaded：未加载数量 
+
+Bytes：未加载占用空间 
+
+Time：时间
+</code></pre><p>4.<strong>垃圾回收统计</strong></p>
+<pre><code>[root@node01 ~]# jstat -gc 6219 
+
+S0C S1C S0U S1U EC EU OC OU MC MU CCSC 
+
+CCSU YGC YGCT FGC FGCT GCT 
+
+9216.0 8704.0 0.0 6127.3 62976.0 3560.4 33792.0 20434.9 23808.0 23196.1 
+
+2560.0 2361.6 7 1.078 1 0.244 1.323 
+</code></pre><pre><code>说明：
+S0C：第一个Survivor区的大小（KB）
+S1C：第二个Survivor区的大小（KB）
+S0U：第一个Survivor区的使用大小（KB）
+S1U：第二个Survivor区的使用大小（KB）
+EC：Eden区的大小（KB）
+EU：Eden区的使用大小（KB）
+OC：Old区大小（KB）
+OU：Old使用大小（KB）
+MC：方法区大小（KB）
+MU：方法区使用大小（KB）
+CCSC：压缩类空间大小（KB）
+CCSU：压缩类空间使用大小（KB）
+YGC：年轻代垃圾回收次数
+YGCT：年轻代垃圾回收消耗时间
+FGC：老年代垃圾回收次数
+FGCT：老年代垃圾回收消耗时间
+GCT：垃圾回收消耗总时间
+</code></pre><h2 id="3-jmap的使用"><a href="#3-jmap的使用" class="headerlink" title="3.jmap的使用"></a>3.jmap的使用</h2><h3 id="3-1-查看内存使用情况"><a href="#3-1-查看内存使用情况" class="headerlink" title="3.1 查看内存使用情况"></a>3.1 查看内存使用情况</h3><pre><code>[root@node01 ~]# jmap -heap 6219
+Attaching to process ID 6219, please wait...
+Debugger attached successfully.
+Server compiler detected.
+JVM version is 25.141-b15
+using thread-local object allocation.
+Parallel GC with 2 thread(s)
+Heap Configuration: #堆内存配置信息
+MinHeapFreeRatio = 0
+MaxHeapFreeRatio = 100
+MaxHeapSize = 488636416 (466.0MB)
+NewSize = 10485760 (10.0MB)
+MaxNewSize = 162529280 (155.0MB)
+OldSize = 20971520 (20.0MB)
+NewRatio = 2
+SurvivorRatio = 8
+MetaspaceSize = 21807104 (20.796875MB)
+CompressedClassSpaceSize = 1073741824 (1024.0MB)
+MaxMetaspaceSize = 17592186044415 MB
+G1HeapRegionSize = 0 (0.0MB)
+Heap Usage: # 堆内存的使用情况
+PS Young Generation #年轻代
+Eden Space:
+capacity = 123731968 (118.0MB)
+used = 1384736 (1.320587158203125MB)
+free = 122347232 (116.67941284179688MB)
+1.1191416594941737% used
+From Space:
+capacity = 9437184 (9.0MB)
+used = 0 (0.0MB)
+free = 9437184 (9.0MB)
+0.0% used
+To Space:
+capacity = 9437184 (9.0MB)
+used = 0 (0.0MB)
+free = 9437184 (9.0MB)
+0.0% used
+PS Old Generation #年老代
+capacity = 28311552 (27.0MB)
+used = 13698672 (13.064071655273438MB)
+free = 14612880 (13.935928344726562MB)
+48.38545057508681% used
+13648 interned Strings occupying 1866368 bytes.
+</code></pre><h3 id="3-2查看内存中对象数量及大小"><a href="#3-2查看内存中对象数量及大小" class="headerlink" title="3.2查看内存中对象数量及大小"></a>3.2查看内存中对象数量及大小</h3><pre><code>jmap -histo:live 6219 | more
+</code></pre><h3 id="3-3将内存使用情况dump到文件中"><a href="#3-3将内存使用情况dump到文件中" class="headerlink" title="3.3将内存使用情况dump到文件中"></a>3.3将内存使用情况dump到文件中</h3><pre><code>jmap -dump:format=b,file=dumpFileName &lt;pid&gt;
+</code></pre><p>会生成dump文件</p>
+<h3 id="3-4通过jhat对dump文件进行分析"><a href="#3-4通过jhat对dump文件进行分析" class="headerlink" title="3.4通过jhat对dump文件进行分析"></a>3.4通过jhat对dump文件进行分析</h3><pre><code>jhat -port 9999 /tmp/dump.dat
+</code></pre><p>打开浏览器进行访问：<a href="http://192.168.40.133:9999/" target="_blank" rel="noopener">http://192.168.40.133:9999/</a></p>
+<p>使用Java的jvmvisual打开dump文件，来分析</p>
+</div><div class="post-copyright"><blockquote><p>原文作者: mjy</p><p>原文链接: <a href="http://blog.moujiangyong.com/2019/05/21/Java虚拟机调优/">http://blog.moujiangyong.com/2019/05/21/Java虚拟机调优/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2019/05/23/feign和restTemplate的使用/" class="pre">okhttp,feign,restTemplate的使用</a><a href="/2019/05/18/logback的使用/" class="next">springboot-logback的使用</a></div><div id="comments"></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-jvm运行参数"><span class="toc-text">1.jvm运行参数</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#标准参数"><span class="toc-text">标准参数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#x参数"><span class="toc-text">-x参数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#xx参数"><span class="toc-text">-xx参数</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-查看参数"><span class="toc-text">2.查看参数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-jmap的使用"><span class="toc-text">3.jmap的使用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-查看内存使用情况"><span class="toc-text">3.1 查看内存使用情况</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2查看内存中对象数量及大小"><span class="toc-text">3.2查看内存中对象数量及大小</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3将内存使用情况dump到文件中"><span class="toc-text">3.3将内存使用情况dump到文件中</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4通过jhat对dump文件进行分析"><span class="toc-text">3.4通过jhat对dump文件进行分析</span></a></li></ol></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/09/21/JVM 配置常用参数和常用 GC 调优策略(转)/">jvm常用配置(转)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/01/开源项目/">开源项目</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/07/02/Linux安装环境/">Linux安装环境</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/17/String/">String.format()方法的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/30/常用递归的使用/">常用递归的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/23/feign和restTemplate的使用/">okhttp,feign,restTemplate的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/21/Java虚拟机调优/">Java虚拟机调优</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/logback的使用/">springboot-logback的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/21/spring-cloud之权限/">spring-cloud之权限</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/01/spring-cloud之链路追踪/">spring-cloud之链路追踪</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JVM/">JVM</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/http请求/">http请求</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/java8/">java8</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springboot/">springboot</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springcloud/">springcloud</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/前端/">前端</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客/">博客</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/搜索引擎/">搜索引擎</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/笔记/">笔记</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/线程/">线程</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/递归/">递归</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/项目/">项目</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/spring-cloud/" style="font-size: 15px;">spring cloud</a> <a href="/tags/资料/" style="font-size: 15px;">资料</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li></ul></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/baidusitemap.xml">网站地图</a> |  <a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><a href="https://beian.miit.gov.cn " rel="nofollow">蜀ICP备19003737号</a></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>

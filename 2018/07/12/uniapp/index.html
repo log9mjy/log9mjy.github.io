@@ -1,0 +1,168 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="jiangyong's blog."><meta name="keywords" content="学习,记录,笔记"><title>学习前端的总结样式 | 听雨时的忧愁</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">学习前端的总结样式</h1><a id="logo" href="/.">听雨时的忧愁</a><p class="description">天下武功,唯快不破</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><div id="search-result"></div></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">学习前端的总结样式</h1><div class="post-meta"><a href="/2018/07/12/uniapp/#comments" class="comment-count"></a><p><span class="date">Jul 12, 2018</span><span><a href="/categories/前端/" class="category">前端</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><h5 id="在app内通过浏览器打开网址"><a href="#在app内通过浏览器打开网址" class="headerlink" title="在app内通过浏览器打开网址"></a>在app内通过浏览器打开网址</h5><pre><code>plus.runtime.openURL(&quot;https://github.com/F-loat/mpvue-echarts&quot;);
+</code></pre><h5 id="左滑删除-不能设置在flex-direction-column-的子元素中"><a href="#左滑删除-不能设置在flex-direction-column-的子元素中" class="headerlink" title="左滑删除(不能设置在flex-direction: column;的子元素中)"></a>左滑删除(不能设置在flex-direction: column;的子元素中)</h5><pre><code class="javascript">&lt;template&gt;
+    &lt;view style=&quot;flex-direction: column;&quot;&gt;
+        &lt;view style=&quot;width: 750upx;&quot;&gt;
+            &lt;view @touchstart=&quot;touchstart&quot; @touchend=&quot;touchend&quot; @tap=&quot;click&quot; :class=&quot;move&quot;&gt;    
+            &lt;view style=&quot;width: 750upx;height: 100upx;background-color: #007AFF;&quot;&gt;&lt;/view&gt;
+            &lt;view style=&quot;width: 200upx;height: 100upx;background-color: #FF0000;&quot; v-show=&quot;show&quot;&gt;&lt;/view&gt;
+            &lt;/view&gt;
+        &lt;/view&gt;
+
+    &lt;/view&gt;
+
+&lt;/template&gt;
+
+&lt;script&gt;
+    export default {
+        data(){
+            return{
+                show:false,
+                sx:0,
+                es:0,
+                move:&quot;&quot;
+            }
+        },
+        methods:{
+            touchend(e){
+                console.log(e.mp.changedTouches[0].clientX)
+                this.ex=e.mp.changedTouches[0].clientX
+                if(this.ex-this.sx&gt;30){
+                    this.move=&quot;move_before&quot;
+                    this.show=false
+                    this.ex=0
+                    this.sx=0
+                }
+                if(this.ex-this.sx&lt;-30){
+                    this.move=&quot;move_after&quot;
+                    this.show=true
+                    this.ex=0
+                    this.sx=0
+                }
+            },
+            touchstart(e){
+                console.log(e.mp.changedTouches[0].clientX)
+                this.sx=e.mp.changedTouches[0].clientX    
+
+            },
+            click(){
+                console.log(&quot;点击&quot;)
+            }
+        }
+    }
+&lt;/script&gt;
+
+&lt;style&gt;
+    .move_before{
+        transform:translateX(0)
+    }
+    .move_after{
+        transform:translateX(-200upx)
+    }
+&lt;/style&gt;
+</code></pre>
+<h5 id="循环操作当前的item"><a href="#循环操作当前的item" class="headerlink" title="循环操作当前的item"></a>循环操作当前的item</h5><pre><code>:class=&quot;move==index?&#39;move_left&#39;:&#39;move_right&#39;
+</code></pre><h5 id="css样式"><a href="#css样式" class="headerlink" title="css样式"></a>css样式</h5><pre><code>1.设置元素的旋转:transform:rotate(45deg);
+  transform 属性向元素应用 2D 或 3D 转换。该属性允许我们对元素进行旋转、缩放、移动或倾斜。
+  元素移动:transform:translateX(-200upx)
+2.设置背景占满全屏:min-height:100vh;
+3.      position: fixed; //固定定位,设置上下左右为0.铺满全屏
+        z-index: 998;//层级,数值越大,显示在最上面
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background-color: rgba(0, 0, 0, .3);//混合颜色,最后一位可视度
+4.
+background-size:auto;/* 默认值，不改变背景图片的高度和宽度 */
+background-size:100px 50px;/* 第一个值为宽，第二个值为高，当设置一个值时，将其作为图片宽度来等比缩放 */
+background-size:10%;/* 0％~100％之间的任何值，将背景图片宽高按百分比显示，当设置一个值的时候同也将其作为图片宽度来等比缩放 */
+background-size:cover;/* 将背景图片等比缩放填满整个容器 */
+background-size:contain;/* 将背景图片等比缩放至某一边紧贴容器边缘 */
+5.height: calc(100% - 100upx);计算高度
+6.box-sizing: border-box;写了这个padding不会改变组件的宽高
+7.overflow:hidden;超过容器隐藏,overflow:scroll;超过容器滚动
+</code></pre><p>事件</p>
+<pre><code>检测物理返回键:onBackPress
+</code></pre><h5 id="vuex的使用"><a href="#vuex的使用" class="headerlink" title="vuex的使用"></a>vuex的使用</h5><p>store/index.js</p>
+<pre><code>import Vue from &#39;vue&#39;
+import Vuex from &#39;vuex&#39;
+
+Vue.use(Vuex)
+
+const store = new Vuex.Store({
+    state: {
+        user:{
+            username:&quot;&quot;,
+            nickname:&quot;&quot;,
+            phone:&quot;&quot;,
+            id:&quot;&quot;,
+        },
+        token:&quot;&quot;
+    },
+    mutations: {
+        setUser(state,user){
+            state.user.username=user.username
+            state.user.nickname=user.nickname
+            state.user.phone=user.phone
+            state.user.id=user.id            
+        },
+        logout(state){
+            state.token=&quot;&quot;
+        },
+        setToken(state,token){
+            state.token=token
+        }
+
+    }
+})
+
+export default store
+</code></pre><p>使用</p>
+<p>main.js</p>
+<pre><code>import store from &#39;./store&#39;
+Vue.prototype.$store = store
+</code></pre><h5 id="使用scroll-view注意"><a href="#使用scroll-view注意" class="headerlink" title="使用scroll-view注意"></a>使用scroll-view注意</h5><pre><code>当设置为x轴滑动
+
+scroll-view的样式设置为:white-space: nowrap;规定段落中的文本不进行换行：
+
+子view的样式设置为:display: inline-block;不独占一行的块级元素
+</code></pre><h5 id="渐变"><a href="#渐变" class="headerlink" title="渐变"></a>渐变</h5><pre><code>background: linear-gradient(direction, color-stop1, color-stop2, ...);
+</code></pre><h5 id="使用scroll-view-Y轴滚动"><a href="#使用scroll-view-Y轴滚动" class="headerlink" title="使用scroll-view,Y轴滚动"></a>使用scroll-view,Y轴滚动</h5><pre><code>主页:
+
+.page {
+        flex-direction: column;
+        height: 100vh;
+        width: 750upx;
+        background-color: #F1F1F3;
+        position: fixed;
+        top: 0;
+        left: 0;
+    }
+
+scroll-view,需放到一个view中,不单独使用,
+
+&lt;view style=&quot;width: 750upx;flex:1 ;padding-bottom: 100upx;&quot;&gt;
+    &lt;scroll-view style=&quot;width: 750upx;height: 100%&quot; scroll-y&gt;
+</code></pre><h5 id="键盘弹起来压缩输入框"><a href="#键盘弹起来压缩输入框" class="headerlink" title="键盘弹起来压缩输入框"></a>键盘弹起来压缩输入框</h5><pre><code>flex-shrink:0;
+</code></pre><h5 id="实现弹框的动画"><a href="#实现弹框的动画" class="headerlink" title="实现弹框的动画"></a>实现弹框的动画</h5><pre><code>隐藏前{
+transition: all 0.3s ease;
+transform: translateY(100%);
+}
+显示{
+transform: translateY(0);
+}
+</code></pre><h5 id="实现返回列表页面"><a href="#实现返回列表页面" class="headerlink" title="实现返回列表页面"></a>实现返回列表页面</h5><p>在收货地址的时候.编辑后返回地址列表,应使用返回,而不是用挑转</p>
+<pre><code>uni.navigateBack({
+                delta:1
+                })
+</code></pre><h5 id="文字超出省略号"><a href="#文字超出省略号" class="headerlink" title="文字超出省略号"></a>文字超出省略号</h5><p>单行</p>
+<pre><code>display: block;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+</code></pre><p>多行</p>
+<pre><code>display: -webkit-box;
+-webkit-box-orient: vertical;
+-webkit-line-clamp: 3;
+overflow: hidden;
+</code></pre></div><div class="post-copyright"><blockquote><p>原文作者: mjy</p><p>原文链接: <a href="http://blog.moujiangyong.com/2018/07/12/uniapp/">http://blog.moujiangyong.com/2018/07/12/uniapp/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2018/07/12/java8集合流式编程/" class="pre">java8集合流式编程</a><a href="/2018/07/12/安装elasticsearch/" class="next">elasticsearch使用</a></div><div id="comments"></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-5"><a class="toc-link" href="#在app内通过浏览器打开网址"><span class="toc-text">在app内通过浏览器打开网址</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#左滑删除-不能设置在flex-direction-column-的子元素中"><span class="toc-text">左滑删除(不能设置在flex-direction: column;的子元素中)</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#循环操作当前的item"><span class="toc-text">循环操作当前的item</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#css样式"><span class="toc-text">css样式</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#vuex的使用"><span class="toc-text">vuex的使用</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#使用scroll-view注意"><span class="toc-text">使用scroll-view注意</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#渐变"><span class="toc-text">渐变</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#使用scroll-view-Y轴滚动"><span class="toc-text">使用scroll-view,Y轴滚动</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#键盘弹起来压缩输入框"><span class="toc-text">键盘弹起来压缩输入框</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#实现弹框的动画"><span class="toc-text">实现弹框的动画</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#实现返回列表页面"><span class="toc-text">实现返回列表页面</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#文字超出省略号"><span class="toc-text">文字超出省略号</span></a></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/09/21/JVM 配置常用参数和常用 GC 调优策略(转)/">jvm常用配置(转)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/01/开源项目/">开源项目</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/07/02/Linux安装环境/">Linux安装环境</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/17/String/">String.format()方法的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/30/常用递归的使用/">常用递归的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/23/feign和restTemplate的使用/">okhttp,feign,restTemplate的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/21/Java虚拟机调优/">Java虚拟机调优</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/logback的使用/">springboot-logback的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/21/spring-cloud之权限/">spring-cloud之权限</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/01/spring-cloud之链路追踪/">spring-cloud之链路追踪</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JVM/">JVM</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/http请求/">http请求</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/java8/">java8</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springboot/">springboot</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springcloud/">springcloud</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/前端/">前端</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客/">博客</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/搜索引擎/">搜索引擎</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/笔记/">笔记</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/线程/">线程</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/递归/">递归</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/项目/">项目</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/spring-cloud/" style="font-size: 15px;">spring cloud</a> <a href="/tags/资料/" style="font-size: 15px;">资料</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li></ul></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/baidusitemap.xml">网站地图</a> |  <a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><a href="https://beian.miit.gov.cn " rel="nofollow">蜀ICP备19003737号</a></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>

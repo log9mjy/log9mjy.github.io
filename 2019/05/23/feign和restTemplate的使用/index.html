@@ -1,0 +1,305 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="jiangyong's blog."><meta name="keywords" content="学习,记录,笔记"><title>okhttp,feign,restTemplate的使用 | 听雨时的忧愁</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">okhttp,feign,restTemplate的使用</h1><a id="logo" href="/.">听雨时的忧愁</a><p class="description">天下武功,唯快不破</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><div id="search-result"></div></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">okhttp,feign,restTemplate的使用</h1><div class="post-meta"><a href="/2019/05/23/feign和restTemplate的使用/#comments" class="comment-count"></a><p><span class="date">May 23, 2019</span><span><a href="/categories/http请求/" class="category">http请求</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><h1 id="OKHTTP"><a href="#OKHTTP" class="headerlink" title="OKHTTP"></a>OKHTTP</h1><h2 id="I-简介"><a href="#I-简介" class="headerlink" title="I.简介"></a>I.简介</h2><p>HTTP是现代应用常用的一种交换数据和媒体的网络方式，高效地使用HTTP能让资源加载更快，节省带宽。OkHttp是一个高效的HTTP客户端，它有以下默认特性：</p>
+<ul>
+<li>支持HTTP/2，允许所有同一个主机地址的请求共享同一个socket连接</li>
+<li>连接池减少请求延时</li>
+<li>透明的GZIP压缩减少响应数据的大小</li>
+<li>缓存响应内容，避免一些完全重复的请求</li>
+</ul>
+<p>当网络出现问题的时候OkHttp依然坚守自己的职责，它会自动恢复一般的连接问题，如果你的服务有多个IP地址，当第一个IP请求失败时，OkHttp会交替尝试你配置的其他IP，OkHttp使用现代TLS技术(SNI, ALPN)初始化新的连接，当握手失败时会回退到TLS 1.0。</p>
+<blockquote>
+<p>note: OkHttp 支持 Android 2.3 及以上版本Android平台， 对于 Java, JDK 1.7及以上.</p>
+</blockquote>
+<p>对于Okhttp3的源码阅读预计会写3篇文章来总结：</p>
+<ul>
+<li><a href="https://www.jianshu.com/p/da4a806e599b" target="_blank" rel="noopener">1.Okhttp的基本使用</a></li>
+<li><a href="https://www.jianshu.com/p/b0353ed71151" target="_blank" rel="noopener">2.Okhttp主流程源码分析</a></li>
+<li><a href="https://www.jianshu.com/p/9deec36f2759" target="_blank" rel="noopener">3.Okhttp3架构分析，主要通过一些流程图类展现</a></li>
+</ul>
+<h2 id="II-使用"><a href="#II-使用" class="headerlink" title="II.使用"></a>II.使用</h2><p>OkHttp的使用是非常简单的. 它的请求/响应 API 使用构造器模式builders来设计，它支持阻塞式的同步请求和带回调的异步请求。</p>
+<h2 id="Download-OkHttp3"><a href="#Download-OkHttp3" class="headerlink" title="Download OkHttp3"></a>Download OkHttp3</h2><pre><code>implementation &#39;com.squareup.okhttp3:okhttp:3.10.0&#39;
+</code></pre><p>当你看到这的时候，可能最新的稳定版已经不是<code>3.10.0</code>了，你需要移步官方GitHub来查看最新版本。 <a href="https://github.com/square/okhttp" target="_blank" rel="noopener">官方地址 https://github.com/square/okhttp</a>，另外不要忘了在清单文件声明访问Internet的权限，如果使用 <code>DiskLruCache</code>，那还得声明写外存的权限。</p>
+<h2 id="1-1-异步GET请求"><a href="#1-1-异步GET请求" class="headerlink" title="1.1. 异步GET请求"></a>1.1. 异步GET请求</h2><p>-new OkHttpClient;<br> -构造Request对象；<br> -通过前两步中的对象构建Call对象；<br> -通过Call#enqueue(Callback)方法来提交异步请求；</p>
+<pre><code>String url = &quot;http://wwww.baidu.com&quot;;
+OkHttpClient okHttpClient = new OkHttpClient();
+final Request request = new Request.Builder()
+        .url(url)
+        .get()//默认就是GET请求，可以不写
+        .build();
+Call call = okHttpClient.newCall(request);
+call.enqueue(new Callback() {
+    @Override
+    public void onFailure(Call call, IOException e) {
+        Log.d(TAG, &quot;onFailure: &quot;);
+    }
+
+    @Override
+    public void onResponse(Call call, Response response) throws IOException {
+        Log.d(TAG, &quot;onResponse: &quot; + response.body().string());
+    }
+});
+</code></pre><p>异步发起的请求会被加入到 <code>Dispatcher</code> 中的 <code>runningAsyncCalls</code>双端队列中通过线程池来执行。</p>
+<h2 id="1-2-同步GET请求"><a href="#1-2-同步GET请求" class="headerlink" title="1.2. 同步GET请求"></a>1.2. 同步GET请求</h2><p>前面几个步骤和异步方式一样，只是最后一部是通过 <code>Call#execute()</code> 来提交请求，注意这种方式会阻塞调用线程，所以在Android中应放在子线程中执行，否则有可能引起ANR异常，<code>Android3.0</code> 以后已经不允许在主线程访问网络。</p>
+<pre><code>String url = &quot;http://wwww.baidu.com&quot;;
+OkHttpClient okHttpClient = new OkHttpClient();
+final Request request = new Request.Builder()
+        .url(url)
+        .build();
+final Call call = okHttpClient.newCall(request);
+new Thread(new Runnable() {
+    @Override
+    public void run() {
+        try {
+            Response response = call.execute();
+            Log.d(TAG, &quot;run: &quot; + response.body().string());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}).start();
+</code></pre><h2 id="2-1-POST方式提交String"><a href="#2-1-POST方式提交String" class="headerlink" title="2.1. POST方式提交String"></a>2.1. POST方式提交String</h2><p>这种方式与前面的区别就是在构造Request对象时，需要多构造一个RequestBody对象，用它来携带我们要提交的数据。在构造 <code>RequestBody</code> 需要指定<code>MediaType</code>，用于描述请求/响应 <code>body</code> 的内容类型，关于 <code>MediaType</code> 的更多信息可以查看 <a href="https://tools.ietf.org/html/rfc2045" target="_blank" rel="noopener">RFC 2045</a>，RequstBody的几种构造方式：</p>
+<p><img src="https:////upload-images.jianshu.io/upload_images/3631399-304a944b5bef663e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/921/format/webp" alt="img"></p>
+<p>request_body</p>
+<pre><code>MediaType mediaType = MediaType.parse(&quot;text/x-markdown; charset=utf-8&quot;);
+String requestBody = &quot;I am Jdqm.&quot;;
+Request request = new Request.Builder()
+        .url(&quot;https://api.github.com/markdown/raw&quot;)
+        .post(RequestBody.create(mediaType, requestBody))
+        .build();
+OkHttpClient okHttpClient = new OkHttpClient();
+okHttpClient.newCall(request).enqueue(new Callback() {
+    @Override
+    public void onFailure(Call call, IOException e) {
+        Log.d(TAG, &quot;onFailure: &quot; + e.getMessage());
+    }
+
+    @Override
+    public void onResponse(Call call, Response response) throws IOException {
+        Log.d(TAG, response.protocol() + &quot; &quot; +response.code() + &quot; &quot; + response.message());
+        Headers headers = response.headers();
+        for (int i = 0; i &lt; headers.size(); i++) {
+            Log.d(TAG, headers.name(i) + &quot;:&quot; + headers.value(i));
+        }
+        Log.d(TAG, &quot;onResponse: &quot; + response.body().string());
+    }
+});
+</code></pre><p>响应内容</p>
+<pre><code>http/1.1 200 OK 
+Date:Sat, 10 Mar 2018 05:23:20 GMT 
+Content-Type:text/html;charset=utf-8
+Content-Length:18
+Server:GitHub.com 
+Status:200 OK 
+X-RateLimit-Limit:60
+X-RateLimit-Remaining:52
+X-RateLimit-Reset:1520661052
+X-CommonMarker-Version:0.17.4
+Access-Control-Expose-Headers:ETag, Link, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval
+
+Access-Control-Allow-Origin:*
+Content-Security-Policy:default-src &#39;none&#39;
+Strict-Transport-Security:max-age=31536000; includeSubdomains; preload 
+X-Content-Type-Options:nosniff 
+X-Frame-Options:deny 
+X-XSS-Protection:1; mode=block 
+X-Runtime-rack:0.019668
+Vary:Accept-Encoding 
+X-GitHub-Request-Id:1474:20A83:5CC0B6:7A7C1B:5AA36BC8 
+onResponse: &lt;p&gt;I am Jdqm.&lt;/p&gt;
+</code></pre><h2 id="2-2-POST方式提交流"><a href="#2-2-POST方式提交流" class="headerlink" title="2.2 POST方式提交流"></a>2.2 POST方式提交流</h2><pre><code>RequestBody requestBody = new RequestBody() {
+    @Nullable
+    @Override
+    public MediaType contentType() {
+        return MediaType.parse(&quot;text/x-markdown; charset=utf-8&quot;);
+    }
+
+    @Override
+    public void writeTo(BufferedSink sink) throws IOException {
+        sink.writeUtf8(&quot;I am Jdqm.&quot;);
+    }
+};
+
+Request request = new Request.Builder()
+        .url(&quot;https://api.github.com/markdown/raw&quot;)
+        .post(requestBody)
+        .build();
+OkHttpClient okHttpClient = new OkHttpClient();
+okHttpClient.newCall(request).enqueue(new Callback() {
+    @Override
+    public void onFailure(Call call, IOException e) {
+        Log.d(TAG, &quot;onFailure: &quot; + e.getMessage());
+    }
+
+    @Override
+    public void onResponse(Call call, Response response) throws IOException {
+        Log.d(TAG, response.protocol() + &quot; &quot; +response.code() + &quot; &quot; + response.message());
+        Headers headers = response.headers();
+        for (int i = 0; i &lt; headers.size(); i++) {
+            Log.d(TAG, headers.name(i) + &quot;:&quot; + headers.value(i));
+        }
+        Log.d(TAG, &quot;onResponse: &quot; + response.body().string());
+    }
+});
+</code></pre><h2 id="2-3-POST提交文件"><a href="#2-3-POST提交文件" class="headerlink" title="2.3. POST提交文件"></a>2.3. POST提交文件</h2><pre><code>MediaType mediaType = MediaType.parse(&quot;text/x-markdown; charset=utf-8&quot;);
+OkHttpClient okHttpClient = new OkHttpClient();
+File file = new File(&quot;test.md&quot;);
+Request request = new Request.Builder()
+        .url(&quot;https://api.github.com/markdown/raw&quot;)
+        .post(RequestBody.create(mediaType, file))
+        .build();
+okHttpClient.newCall(request).enqueue(new Callback() {
+    @Override
+    public void onFailure(Call call, IOException e) {
+        Log.d(TAG, &quot;onFailure: &quot; + e.getMessage());
+    }
+
+    @Override
+    public void onResponse(Call call, Response response) throws IOException {
+        Log.d(TAG, response.protocol() + &quot; &quot; +response.code() + &quot; &quot; + response.message());
+        Headers headers = response.headers();
+        for (int i = 0; i &lt; headers.size(); i++) {
+            Log.d(TAG, headers.name(i) + &quot;:&quot; + headers.value(i));
+        }
+        Log.d(TAG, &quot;onResponse: &quot; + response.body().string());
+    }
+});
+</code></pre><h2 id="2-4-POST方式提交表单"><a href="#2-4-POST方式提交表单" class="headerlink" title="2.4. POST方式提交表单"></a>2.4. POST方式提交表单</h2><pre><code>OkHttpClient okHttpClient = new OkHttpClient();
+RequestBody requestBody = new FormBody.Builder()
+        .add(&quot;search&quot;, &quot;Jurassic Park&quot;)
+        .build();
+Request request = new Request.Builder()
+        .url(&quot;https://en.wikipedia.org/w/index.php&quot;)
+        .post(requestBody)
+        .build();
+
+okHttpClient.newCall(request).enqueue(new Callback() {
+    @Override
+    public void onFailure(Call call, IOException e) {
+        Log.d(TAG, &quot;onFailure: &quot; + e.getMessage());
+    }
+
+    @Override
+    public void onResponse(Call call, Response response) throws IOException {
+        Log.d(TAG, response.protocol() + &quot; &quot; +response.code() + &quot; &quot; + response.message());
+        Headers headers = response.headers();
+        for (int i = 0; i &lt; headers.size(); i++) {
+            Log.d(TAG, headers.name(i) + &quot;:&quot; + headers.value(i));
+        }
+        Log.d(TAG, &quot;onResponse: &quot; + response.body().string());
+    }
+});
+</code></pre><p>提交表单时，使用 <code>RequestBody</code> 的实现类<code>FormBody</code>来描述请求体，它可以携带一些经过编码的 <code>key-value</code> 请求体，键值对存储在下面两个集合中：</p>
+<pre><code>  private final List&lt;String&gt; encodedNames;
+  private final List&lt;String&gt; encodedValues;
+</code></pre><h2 id="2-5-POST方式提交分块请求"><a href="#2-5-POST方式提交分块请求" class="headerlink" title="2.5. POST方式提交分块请求"></a>2.5. POST方式提交分块请求</h2><p>MultipartBody 可以构建复杂的请求体，与HTML文件上传形式兼容。多块请求体中每块请求都是一个请求体，可以定义自己的请求头。这些请求头可以用来描述这块请求，例如它的 <code>Content-Disposition</code> 。如果 <code>Content-Length</code> 和 <code>Content-Type</code> 可用的话，他们会被自动添加到请求头中。</p>
+<pre><code>private static final String IMGUR_CLIENT_ID = &quot;...&quot;;
+private static final MediaType MEDIA_TYPE_PNG = MediaType.parse(&quot;image/png&quot;);
+
+private void postMultipartBody() {
+    OkHttpClient client = new OkHttpClient();
+
+
+    // Use the imgur image upload API as documented at https://api.imgur.com/endpoints/image
+    MultipartBody body = new MultipartBody.Builder(&quot;AaB03x&quot;)
+            .setType(MultipartBody.FORM)
+            .addPart(
+                    Headers.of(&quot;Content-Disposition&quot;, &quot;form-data; name=\&quot;title\&quot;&quot;),
+                    RequestBody.create(null, &quot;Square Logo&quot;))
+            .addPart(
+                    Headers.of(&quot;Content-Disposition&quot;, &quot;form-data; name=\&quot;image\&quot;&quot;),
+                    RequestBody.create(MEDIA_TYPE_PNG, new File(&quot;website/static/logo-square.png&quot;)))
+            .build();
+
+    Request request = new Request.Builder()
+            .header(&quot;Authorization&quot;, &quot;Client-ID &quot; + IMGUR_CLIENT_ID)
+            .url(&quot;https://api.imgur.com/3/image&quot;)
+            .post(body)
+            .build();
+
+    Call call = client.newCall(request);
+    call.enqueue(new Callback() {
+        @Override
+        public void onFailure(Call call, IOException e) {
+
+        }
+
+        @Override
+        public void onResponse(Call call, Response response) throws IOException {
+            System.out.println(response.body().string());
+
+        }
+
+    });
+}
+</code></pre><h2 id="III-拦截器-interceptor"><a href="#III-拦截器-interceptor" class="headerlink" title="III.拦截器-interceptor"></a>III.拦截器-interceptor</h2><p>OkHttp的拦截器链可谓是其整个框架的精髓，用户可传入的 <code>interceptor</code> 分为两类：<br> ①一类是全局的 <code>interceptor</code>，该类 <code>interceptor</code> 在整个拦截器链中最早被调用，通过 <code>OkHttpClient.Builder#addInterceptor(Interceptor)</code> 传入；<br> ②另外一类是非网页请求的 <code>interceptor</code> ，这类拦截器只会在非网页请求中被调用，并且是在组装完请求之后，真正发起网络请求前被调用，所有的 <code>interceptor</code> 被保存在 <code>List&lt;Interceptor&gt; interceptors</code> 集合中，按照添加顺序来逐个调用，具体可参考 <code>RealCall#getResponseWithInterceptorChain()</code> 方法。通过 <code>OkHttpClient.Builder#addNetworkInterceptor(Interceptor)</code> 传入；</p>
+<p>这里举一个简单的例子，例如有这样一个需求，我要监控App通过 <code>OkHttp</code> 发出的所有原始请求，以及整个请求所耗费的时间，针对这样的需求就可以使用第一类全局的 <code>interceptor</code> 在拦截器链头去做。</p>
+<pre><code>OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        .addInterceptor(new LoggingInterceptor())
+        .build();
+Request request = new Request.Builder()
+        .url(&quot;http://www.publicobject.com/helloworld.txt&quot;)
+        .header(&quot;User-Agent&quot;, &quot;OkHttp Example&quot;)
+        .build();
+okHttpClient.newCall(request).enqueue(new Callback() {
+    @Override
+    public void onFailure(Call call, IOException e) {
+        Log.d(TAG, &quot;onFailure: &quot; + e.getMessage());
+    }
+
+    @Override
+    public void onResponse(Call call, Response response) throws IOException {
+        ResponseBody body = response.body();
+        if (body != null) {
+            Log.d(TAG, &quot;onResponse: &quot; + response.body().string());
+            body.close();
+        }
+    }
+});
+public class LoggingInterceptor implements Interceptor {
+    private static final String TAG = &quot;LoggingInterceptor&quot;;
+
+    @Override
+    public Response intercept(Chain chain) throws IOException {
+        Request request = chain.request();
+
+        long startTime = System.nanoTime();
+        Log.d(TAG, String.format(&quot;Sending request %s on %s%n%s&quot;,
+                request.url(), chain.connection(), request.headers()));
+
+        Response response =  chain.proceed(request);
+
+        long endTime = System.nanoTime();
+        Log.d(TAG, String.format(&quot;Received response for %s in %.1fms%n%s&quot;,
+                response.request().url(), (endTime - startTime) / 1e6d, response.headers()));
+
+        return response;
+    }
+}
+</code></pre><p>针对这个请求，打印出来的结果</p>
+<pre><code>Sending request http://www.publicobject.com/helloworld.txt on null
+User-Agent: OkHttp Example
+
+Received response for https://publicobject.com/helloworld.txt in 1265.9ms
+Server: nginx/1.10.0 (Ubuntu)
+Date: Wed, 28 Mar 2018 08:19:48 GMT
+Content-Type: text/plain
+Content-Length: 1759
+Last-Modified: Tue, 27 May 2014 02:35:47 GMT
+Connection: keep-alive
+ETag: &quot;5383fa03-6df&quot;
+Accept-Ranges: bytes
+</code></pre><p>注意到一点是这个请求做了重定向，原始的 <code>request url</code> 是 <code>http://www.publicobject.com/helloworld.tx</code>，而响应的 <code>request url</code> 是 <code>https://publicobject.com/helloworld.txt</code>，这说明一定发生了重定向，但是做了几次重定向其实我们这里是不知道的，要知道这些的话，可以使用 <code>addNetworkInterceptor()</code>去做。更多的关于 <code>interceptor</code>的使用以及它们各自的优缺点，请移步OkHttp<a href="https://github.com/square/okhttp/wiki/Interceptors" target="_blank" rel="noopener">官方说明文档</a>。</p>
+<p><img src="https:////upload-images.jianshu.io/upload_images/3631399-164b722ab35ae9bf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/432/format/webp" alt="img"></p>
+<p>完整interceptor-chain</p>
+<h2 id="IV-自定义dns服务"><a href="#IV-自定义dns服务" class="headerlink" title="IV. 自定义dns服务"></a>IV. 自定义dns服务</h2><p>Okhttp默认情况下使用的是系统</p>
+<h2 id="V-其他"><a href="#V-其他" class="headerlink" title="V.其他"></a>V.其他</h2><ol>
+<li>推荐让 <code>OkHttpClient</code> 保持单例，用同一个 <code>OkHttpClient</code> 实例来执行你的所有请求，因为每一个 <code>OkHttpClient</code> 实例都拥有自己的连接池和线程池，重用这些资源可以减少延时和节省资源，如果为每个请求创建一个 <code>OkHttpClient</code> 实例，显然就是一种资源的浪费。当然，也可以使用如下的方式来创建一个新的 <code>OkHttpClient</code> 实例，它们共享连接池、线程池和配置信息。</li>
+</ol>
+<pre><code class="Java">    OkHttpClient eagerClient = client.newBuilder()
+        .readTimeout(500, TimeUnit.MILLISECONDS)
+        .build();
+    Response response = eagerClient.newCall(request).execute();
+</code></pre>
+<ol>
+<li>每一个Call（其实现是RealCall）只能执行一次，否则会报异常，具体参见 <code>RealCall#execute()</code></li>
+</ol>
+<h1 id="RestTemplate"><a href="#RestTemplate" class="headerlink" title="RestTemplate"></a>RestTemplate</h1></div><div class="post-copyright"><blockquote><p>原文作者: mjy</p><p>原文链接: <a href="http://blog.moujiangyong.com/2019/05/23/feign和restTemplate的使用/">http://blog.moujiangyong.com/2019/05/23/feign和restTemplate的使用/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2019/05/30/常用递归的使用/" class="pre">常用递归的使用</a><a href="/2019/05/21/Java虚拟机调优/" class="next">Java虚拟机调优</a></div><div id="comments"></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#OKHTTP"><span class="toc-text">OKHTTP</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#I-简介"><span class="toc-text">I.简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#II-使用"><span class="toc-text">II.使用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Download-OkHttp3"><span class="toc-text">Download OkHttp3</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-异步GET请求"><span class="toc-text">1.1. 异步GET请求</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-同步GET请求"><span class="toc-text">1.2. 同步GET请求</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-POST方式提交String"><span class="toc-text">2.1. POST方式提交String</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-POST方式提交流"><span class="toc-text">2.2 POST方式提交流</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-3-POST提交文件"><span class="toc-text">2.3. POST提交文件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-4-POST方式提交表单"><span class="toc-text">2.4. POST方式提交表单</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-5-POST方式提交分块请求"><span class="toc-text">2.5. POST方式提交分块请求</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#III-拦截器-interceptor"><span class="toc-text">III.拦截器-interceptor</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#IV-自定义dns服务"><span class="toc-text">IV. 自定义dns服务</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#V-其他"><span class="toc-text">V.其他</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#RestTemplate"><span class="toc-text">RestTemplate</span></a></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/09/21/JVM 配置常用参数和常用 GC 调优策略(转)/">jvm常用配置(转)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/01/开源项目/">开源项目</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/07/02/Linux安装环境/">Linux安装环境</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/17/String/">String.format()方法的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/30/常用递归的使用/">常用递归的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/23/feign和restTemplate的使用/">okhttp,feign,restTemplate的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/21/Java虚拟机调优/">Java虚拟机调优</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/logback的使用/">springboot-logback的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/21/spring-cloud之权限/">spring-cloud之权限</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/01/spring-cloud之链路追踪/">spring-cloud之链路追踪</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JVM/">JVM</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/http请求/">http请求</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/java8/">java8</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springboot/">springboot</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springcloud/">springcloud</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/前端/">前端</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客/">博客</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/搜索引擎/">搜索引擎</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/笔记/">笔记</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/线程/">线程</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/递归/">递归</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/项目/">项目</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/spring-cloud/" style="font-size: 15px;">spring cloud</a> <a href="/tags/资料/" style="font-size: 15px;">资料</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li></ul></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/baidusitemap.xml">网站地图</a> |  <a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><a href="https://beian.miit.gov.cn " rel="nofollow">蜀ICP备19003737号</a></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>

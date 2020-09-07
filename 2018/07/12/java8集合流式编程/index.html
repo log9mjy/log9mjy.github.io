@@ -1,0 +1,99 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="jiangyong's blog."><meta name="keywords" content="学习,记录,笔记"><title>java8集合流式编程 | 听雨时的忧愁</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">java8集合流式编程</h1><a id="logo" href="/.">听雨时的忧愁</a><p class="description">天下武功,唯快不破</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><div id="search-result"></div></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">java8集合流式编程</h1><div class="post-meta"><a href="/2018/07/12/java8集合流式编程/#comments" class="comment-count"></a><p><span class="date">Jul 12, 2018</span><span><a href="/categories/java8/" class="category">java8</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><h4 id="java8集合流式编程"><a href="#java8集合流式编程" class="headerlink" title="java8集合流式编程"></a>java8集合流式编程</h4><h5 id="获取流对象"><a href="#获取流对象" class="headerlink" title="获取流对象"></a>获取流对象</h5><ul>
+<li>对于集合来说,直接通过stream()方法即可获取流对象</li>
+</ul>
+<pre><code>List&lt;Person&gt; list = new ArrayList&lt;Person&gt;(); 
+Stream&lt;Person&gt; stream = list.stream();
+</code></pre><ul>
+<li>对于数组来说,通过Arrays类提供的静态函数stream()获取数组的流对象</li>
+</ul>
+<pre><code>String[] names = {&quot;chaimm&quot;,&quot;peter&quot;,&quot;john&quot;};
+Stream&lt;String&gt; stream = Arrays.stream(names);
+</code></pre><ul>
+<li>直接将几个普通的数值变成流对象</li>
+</ul>
+<pre><code>Stream&lt;String&gt; stream = Stream.of(&quot;chaimm&quot;,&quot;peter&quot;,&quot;john&quot;);
+</code></pre><h5 id="中间操作："><a href="#中间操作：" class="headerlink" title="中间操作："></a>中间操作：</h5><ul>
+<li><p>filter()： 对元素进行过滤</p>
+</li>
+<li><p>sorted()：对元素排序</p>
+</li>
+<li><p>map()：用于操作单个集合,比如List<string></string></p>
+</li>
+<li><p>distinct()：去除重复的元素</p>
+</li>
+<li><p>limit(): 截取流的前N个元素</p>
+</li>
+<li><p>skip(): 跳过流的前N个元素</p>
+</li>
+<li><p>flatMap():用于操集合嵌套集合List&lt;List<string>&gt;</string></p>
+<pre><code class="java">String[] s={&quot;hello&quot;,&quot;world&quot;};
+List&lt;String&gt; collect = Arrays.asList(s).stream().flatMap(str -&gt; Arrays.stream(str.split(&quot;&quot;))).distinct().collect(Collectors.toList());
+System.out.println(collect);
+输出
+collect---------[h, e, l, o, w, r, d]
+</code></pre>
+</li>
+</ul>
+<h5 id="最终操作："><a href="#最终操作：" class="headerlink" title="最终操作："></a>最终操作：</h5><ul>
+<li>forEach()：遍历每个元素。</li>
+<li>reduce()：把Stream 元素组合起来。例如，字符串拼接，数值的 sum，min，max ，average 都是特殊的 reduce。</li>
+<li>collect()：将集合元素集合起来,具体返回什么看里面参数Collectors的操作。</li>
+<li>min()：找到最小值。</li>
+<li>max()：找到最大值。</li>
+</ul>
+<p><strong>Collectors用于对新集合的操作,常用方法asList()返回新的集合,joining()拼接起来返回字符串,joining(“_”)用短横线拼接起来返回字符串</strong></p>
+<p>用于对集合的操作,</p>
+<p>collection.stream.中间操作.中间操作…最终操作</p>
+<p>如:</p>
+<pre><code class="Java">ArrayList&lt;Integer&gt; integers = Lists.newArrayList();
+integers.add(5);
+integers.add(10);
+integers.add(20);
+integers.add(19);
+String collect = integers.stream().filter(i -&gt; i &gt; 10).map(i -&gt; i + &quot;&quot;).collect(Collectors.joining());
+System.out.println(collect);2019
+当-&gt;只有一条语句不需要返回值,当多条语句,需要{}且要有返回值
+</code></pre>
+<h5 id="Collectors-toMap用法"><a href="#Collectors-toMap用法" class="headerlink" title="Collectors.toMap用法"></a>Collectors.toMap用法</h5><p>Collectors.toMap(v1,v2);v1方法返回key,v2方法返回value</p>
+<p>Collectors.toMap(v1,v2,v);v1方法返回key,v2方法返回value,v方法返回当key值相同时,value的处理,参数为(oldkey,newkey)</p>
+<p>例如:</p>
+<pre><code class="Java">collect.(Collectors.toMap(t -&gt; t[0], t -&gt; Lists.newArrayList(t[1]),
+                    (List&lt;String&gt; oldList, List&lt;String&gt; newList) -&gt; {
+                        oldList.addAll(newList);
+                        return oldList;
+                    })
+t为流中的一个元素,key值为:t[0],value值为:t[1]转为集合,当key值相同,value值的处理,将新集合的元素全部添加到旧集合中,再将旧集合返回.                    
+</code></pre>
+<p>例:</p>
+<pre><code class="Java">//颜色=[银], 尺寸=[小号, 中号, 大号]
+String s = &quot;颜色:银;尺寸:小号;颜色:银;尺寸:中号;颜色:银;尺寸:大号&quot;;
+List&lt;String&gt; collect1 = Arrays.stream(s.split(&quot;;&quot;)).distinct().collect(Collectors.toList());
+System.out.println(collect1);//[颜色:银, 尺寸:小号, 尺寸:中号, 尺寸:大号]
+List&lt;String[]&gt; collect2 = collect1.stream().map(t -&gt; t.split(&quot;:&quot;)).collect(Collectors.toList());
+System.out.println(collect2);//[[颜色,银],[尺寸,小号],[尺寸,中号],[尺寸,大号]]
+Map&lt;String, List&lt;String&gt;&gt; collect = collect2.stream().collect(Collectors.toMap(t -&gt; t[0], t -&gt; {
+    List&lt;String&gt; list = new ArrayList&lt;&gt;();
+    list.add(t[1]);
+    return list;
+},(List&lt;String&gt; oldList,List&lt;String&gt; newList)-&gt;{
+    oldList.addAll(newList);
+    return oldList;
+}));
+System.out.println(collect);//{颜色=[银], 尺寸=[小号, 中号, 大号]}
+
+--------------------------------------------------------------------
+链式处理
+
+Map&lt;String, List&lt;String&gt;&gt; collect3 = Arrays.stream(s.split(&quot;;&quot;)).distinct().map(t -&gt; t.split(&quot;:&quot;)).collect(Collectors.toMap(t -&gt; t[0], t -&gt; {
+            List&lt;String&gt; list = new ArrayList&lt;&gt;();
+            list.add(t[1]);
+            return list;
+        }, (List&lt;String&gt; oldList, List&lt;String&gt; newList) -&gt; {
+            oldList.addAll(newList);
+            return oldList;
+        }));
+
+  System.out.println(collect3);//{颜色=[银], 尺寸=[小号, 中号, 大号]}  
+
+</code></pre>
+</div><div class="post-copyright"><blockquote><p>原文作者: mjy</p><p>原文链接: <a href="http://blog.moujiangyong.com/2018/07/12/java8集合流式编程/">http://blog.moujiangyong.com/2018/07/12/java8集合流式编程/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2018/07/12/VUE/" class="pre">VUE的使用</a><a href="/2018/07/12/uniapp/" class="next">学习前端的总结样式</a></div><div id="comments"></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#java8集合流式编程"><span class="toc-text">java8集合流式编程</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#获取流对象"><span class="toc-text">获取流对象</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#中间操作："><span class="toc-text">中间操作：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#最终操作："><span class="toc-text">最终操作：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Collectors-toMap用法"><span class="toc-text">Collectors.toMap用法</span></a></li></ol></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/09/21/JVM 配置常用参数和常用 GC 调优策略(转)/">jvm常用配置(转)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/01/开源项目/">开源项目</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/07/02/Linux安装环境/">Linux安装环境</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/17/String/">String.format()方法的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/30/常用递归的使用/">常用递归的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/23/feign和restTemplate的使用/">okhttp,feign,restTemplate的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/21/Java虚拟机调优/">Java虚拟机调优</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/logback的使用/">springboot-logback的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/21/spring-cloud之权限/">spring-cloud之权限</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/01/spring-cloud之链路追踪/">spring-cloud之链路追踪</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JVM/">JVM</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/http请求/">http请求</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/java8/">java8</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springboot/">springboot</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springcloud/">springcloud</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/前端/">前端</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客/">博客</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/搜索引擎/">搜索引擎</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/笔记/">笔记</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/线程/">线程</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/递归/">递归</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/项目/">项目</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/spring-cloud/" style="font-size: 15px;">spring cloud</a> <a href="/tags/资料/" style="font-size: 15px;">资料</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li></ul></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/baidusitemap.xml">网站地图</a> |  <a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><a href="https://beian.miit.gov.cn " rel="nofollow">蜀ICP备19003737号</a></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>

@@ -1,0 +1,876 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="jiangyong's blog."><meta name="keywords" content="学习,记录,笔记"><title>elasticsearch使用 | 听雨时的忧愁</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">elasticsearch使用</h1><a id="logo" href="/.">听雨时的忧愁</a><p class="description">天下武功,唯快不破</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><div id="search-result"></div></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">elasticsearch使用</h1><div class="post-meta"><a href="/2018/07/12/安装elasticsearch/#comments" class="comment-count"></a><p><span class="date">Jul 12, 2018</span><span><a href="/categories/搜索引擎/" class="category">搜索引擎</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><h4 id="安装elasticsearch"><a href="#安装elasticsearch" class="headerlink" title="安装elasticsearch"></a>安装elasticsearch</h4><p>elasticsearch下载地址 <a href="https://www.elastic.co/downloads/past-releases" target="_blank" rel="noopener">https://www.elastic.co/downloads/past-releases</a></p>
+<p>安装head插件,提供多种安装方式,查看readme.md有详细描述</p>
+<p><a href="https://github.com/mobz/elasticsearch-head" target="_blank" rel="noopener">https://github.com/mobz/elasticsearch-head</a></p>
+<p>安装ik分词器,注意分词器与elasticsearch的版本要要一致</p>
+<p><a href="https://github.com/medcl/elasticsearch-analysis-ik" target="_blank" rel="noopener">https://github.com/medcl/elasticsearch-analysis-ik</a></p>
+<h4 id="elasticsearch的关键词"><a href="#elasticsearch的关键词" class="headerlink" title="elasticsearch的关键词"></a>elasticsearch的关键词</h4><p>集群(cluster):由一个或多个节点组成, 并通过集群名称与其他集群进行区分</p>
+<p>节点(node):单个ElasticSearch实例. 通常一个节点运行在一个隔离的容器或虚拟机中</p>
+<p>index: 文档通过<code>index</code> API被索引——使数据可以被存储和搜索。但是首先我们需要决定文档所在。正如我们讨论的，文档通过其<code>_index</code>、<code>_type</code>、<code>_id</code>唯一确定。我们可以自己提供一个<code>_id</code>，或者也使用<code>index</code> API 为我们生成一个。</p>
+<p>document:通常，我们可以认为对象(object)和文档(document)是等价相通的</p>
+<p>type:index存储类型,6.x版本后只能有一种类型</p>
+<p>分片(shard):因为ES是个分布式的搜索引擎, 所以索引通常都会分解成不同部分, 而这些分布在不同节点的数据就是分片. ES自动管理和组织分片, 并在必要的时候对分片数据进行再平衡分配, 所以用户基本上不用担心分片的处理细节，一个分片默认最大文档数量是20亿.</p>
+<p>副本(replica):ES默认为一个索引创建5个主分片, 并分别为其创建一个副本分片. 也就是说每个索引都由5个主分片成本, 而每个主分片都相应的有一个copy.</p>
+<p>对于分布式搜索引擎来说, 分片及副本的分配将是高可用及快速搜索响应的设计核心.主分片与副本都能处理查询请求, 它们的唯一区别在于只有主分片才能处理索引请求.</p>
+<h4 id="安装KIbana"><a href="#安装KIbana" class="headerlink" title="安装KIbana"></a>安装KIbana</h4><p><a href="https://www.elastic.co/guide/cn/kibana/current/windows.html" target="_blank" rel="noopener">https://www.elastic.co/guide/cn/kibana/current/windows.html</a></p>
+<h4 id="数据类型"><a href="#数据类型" class="headerlink" title="数据类型"></a>数据类型</h4><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>表示的数据类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>String</td>
+<td><code>string</code></td>
+</tr>
+<tr>
+<td>Whole number</td>
+<td><code>byte</code>, <code>short</code>, <code>integer</code>, <code>long</code></td>
+</tr>
+<tr>
+<td>Floating point</td>
+<td><code>float</code>, <code>double</code></td>
+</tr>
+<tr>
+<td>Boolean</td>
+<td><code>boolean</code></td>
+</tr>
+<tr>
+<td>Date</td>
+<td><code>date</code></td>
+</tr>
+<tr>
+<td>text</td>
+<td>text(用于分词,不能用于聚合)</td>
+</tr>
+<tr>
+<td>keyword</td>
+<td>keyword(用于聚合以及排序,不能用于分词)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="查询版本"><a href="#查询版本" class="headerlink" title="查询版本"></a>查询版本</h4><pre><code class="javascript">GET  ?pretty
+</code></pre>
+<p>响应</p>
+<pre><code>{
+  &quot;name&quot;: &quot;node-06&quot;,
+  &quot;cluster_name&quot;: &quot;xb-application&quot;,
+  &quot;cluster_uuid&quot;: &quot;k4nebPYsTNeVHgZop-i4ig&quot;,
+  &quot;version&quot;: {
+    &quot;number&quot;: &quot;6.3.0&quot;,
+    &quot;build_flavor&quot;: &quot;default&quot;,
+    &quot;build_type&quot;: &quot;tar&quot;,
+    &quot;build_hash&quot;: &quot;424e937&quot;,
+    &quot;build_date&quot;: &quot;2018-06-11T23:38:03.357887Z&quot;,
+    &quot;build_snapshot&quot;: false,
+    &quot;lucene_version&quot;: &quot;7.3.1&quot;,
+    &quot;minimum_wire_compatibility_version&quot;: &quot;5.6.0&quot;,
+    &quot;minimum_index_compatibility_version&quot;: &quot;5.0.0&quot;
+  },
+  &quot;tagline&quot;: &quot;You Know, for Search&quot;
+}
+</code></pre><h4 id="创建索引"><a href="#创建索引" class="headerlink" title="创建索引"></a>创建索引</h4><p>PUT请求  <a href="http://localhost:9200/accounts" target="_blank" rel="noopener">http://localhost:9200/accounts</a></p>
+<p>返回</p>
+<pre><code class="javascript">{
+  &quot;acknowledged&quot;:true,
+  &quot;shards_acknowledged&quot;:true
+}
+</code></pre>
+<h4 id="创建索引并映射"><a href="#创建索引并映射" class="headerlink" title="创建索引并映射"></a>创建索引并映射</h4><p>映射字段</p>
+<pre><code>{
+　  &quot;type&quot; : &quot;text&quot;, #是数据类型一般文本使用text(可分词进行模糊查询)；keyword无法被分词(不需要执行分词器)，用于精确查找
+
+    &quot;analyzer&quot; : &quot;ik_max_word&quot;, #指定分词器，一般使用最大分词：ik_max_word
+
+    &quot;normalizer&quot; : &quot;normalizer_name&quot;, #字段标准化规则；如把所有字符转为小写；具体如下举例
+
+    &quot;boost&quot; : 1.5, #字段权重；用于查询时评分，关键字段的权重就会高一些，默认都是1；另外查询时可临时指定权重
+
+    &quot;coerce&quot; : true, #清理脏数据：1，字符串会被强制转换为整数 2，浮点数被强制转换为整数；默认为true
+
+    &quot;copy_to&quot; : &quot;field_name&quot;, #自定_all字段；指定某几个字段拼接成自定义；具体如下举例
+
+    &quot;doc_values&quot; : true, #加快排序、聚合操作，但需要额外存储空间；默认true，对于确定不需要排序和聚合的字段可false
+
+    &quot;dynamic&quot; : true, #新字段动态添加 true:无限制 false:数据可写入但该字段不保留 &#39;strict&#39;:无法写入抛异常
+
+    &quot;enabled&quot; : true, #是否会被索引，但都会存储;可以针对一整个_doc
+
+    &quot;fielddata&quot; : false, #针对text字段加快排序和聚合（doc_values对text无效）；此项官网建议不开启，非常消耗内存
+
+    &quot;eager_global_ordinals&quot;: true, #是否开启全局预加载,加快查询；此参数只支持text和keyword，keyword默认可用，而text需要设置fielddata属性
+
+    &quot;format&quot; : &quot;yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis&quot; ,#格式化 此参数代表可接受的时间格式 3种都接受
+
+    &quot;ignore_above&quot; : 100, #指定字段索引和存储的长度最大值，超过最大值的会被忽略
+
+    &quot;ignore_malformed&quot; : false ,#插入文档时是否忽略类型 默认是false 类型不一致无法插入
+
+    &quot;index_options&quot; : &quot;docs&quot; ,
+    # 4个可选参数
+    # docs（索引文档号）,
+    # freqs（文档号 + 词频），
+    # positions（文档号 + 词频 + 位置，通常用来距离查询），
+    # offsets（文档号 + 词频 + 位置 + 偏移量，通常被使用在高亮字段）
+    # 分词字段默认是position，其他的默认是docs
+
+    &quot;index&quot; : true, #该字段是否会被索引和可查询 默认true
+
+    &quot;fields&quot;: {&quot;raw&quot;: {&quot;type&quot;: &quot;keyword&quot;}} ,#可以对一个字段提供多种索引模式，使用text类型做全文检索，也可使用keyword类型做聚合和排序
+
+    &quot;norms&quot; : true, #用于标准化文档，以便查询时计算文档的相关性。建议不开启
+
+    &quot;null_value&quot; : &quot;NULL&quot;, #可以让值为null的字段显式的可索引、可搜索
+
+    &quot;position_increment_gap&quot; : 0 ,#词组查询时可以跨词查询 既可变为分词查询 默认100
+
+    &quot;properties&quot; : {}, #嵌套属性，例如该字段是音乐，音乐还有歌词，类型，歌手等属性
+
+    &quot;search_analyzer&quot; : &quot;ik_max_word&quot; ,#查询分词器;一般情况和analyzer对应
+
+    &quot;similarity&quot; : &quot;BM25&quot;,#用于指定文档评分模型，参数有三个：
+    # BM25 ：ES和Lucene默认的评分模型
+    # classic ：TF/IDF评分
+    # boolean：布尔模型评分
+
+    &quot;store&quot; : true, #默认情况false,其实并不是真没有存储，_source字段里会保存一份原始文档。
+    # 在某些情况下，store参数有意义，比如一个文档里面有title、date和超大的content字段，如果只想获取title和date
+
+    &quot;term_vector&quot; : &quot;no&quot; #默认不存储向量信息，
+    # 支持参数yes（term存储），
+    # with_positions（term + 位置）,
+    # with_offsets（term + 偏移量），
+    # with_positions_offsets(term + 位置 + 偏移量)
+    # 对快速高亮fast vector highlighter能提升性能，但开启又会加大索引体积，不适合大数据量用
+}
+</code></pre><p>将text的字段排序或则聚合</p>
+<p>在映射时使用</p>
+<pre><code class="javascript">&quot;fields&quot;: {
+            &quot;raw&quot;: { 
+              &quot;type&quot;:  &quot;keyword&quot;
+            }
+          }
+</code></pre>
+<p>排序时</p>
+<pre><code class="javascript"> &quot;sort&quot;: {
+    &quot;city.raw&quot;: &quot;asc&quot; 
+  },
+</code></pre>
+<p>类型上字段以及字段类型</p>
+<p>PUT请求  <a href="http://localhost:9200/accounts" target="_blank" rel="noopener">http://localhost:9200/accounts</a></p>
+<p>请求体json:</p>
+<pre><code class="bash">{
+  &quot;mappings&quot;: {
+    &quot;person&quot;: {
+      &quot;properties&quot;: {
+        &quot;user&quot;: {
+          &quot;type&quot;: &quot;text&quot;,
+          &quot;analyzer&quot;: &quot;ik_max_word&quot;,
+          &quot;search_analyzer&quot;: &quot;ik_max_word&quot;
+        },
+        &quot;title&quot;: {
+          &quot;type&quot;: &quot;text&quot;,
+          &quot;analyzer&quot;: &quot;ik_max_word&quot;,
+          &quot;search_analyzer&quot;: &quot;ik_max_word&quot;
+        },
+        &quot;desc&quot;: {
+          &quot;type&quot;: &quot;text&quot;,
+          &quot;analyzer&quot;: &quot;ik_max_word&quot;,
+          &quot;search_analyzer&quot;: &quot;ik_max_word&quot;
+        }
+      }
+    }
+  }
+}
+</code></pre>
+<h4 id="查询映射"><a href="#查询映射" class="headerlink" title="查询映射"></a>查询映射</h4><pre><code>GET /my_index/_mapping/my_type
+</code></pre><pre><code>{
+   &quot;library&quot;: {
+      &quot;mappings&quot;: {
+         &quot;books&quot;: {
+            &quot;properties&quot;: {
+               &quot;name&quot;: {
+                  &quot;type&quot;: &quot;string&quot;,
+                  &quot;index&quot;: &quot;not_analyzed&quot;
+               },
+               &quot;number&quot;: {
+                  &quot;type&quot;: &quot;object&quot;,
+                  &quot;dynamic&quot;: &quot;true&quot;
+               },
+               &quot;price&quot;: {
+                  &quot;type&quot;: &quot;double&quot;
+               },
+               &quot;publish_date&quot;: {
+                  &quot;type&quot;: &quot;date&quot;,
+                  &quot;format&quot;: &quot;dateOptionalTime&quot;
+               },
+               &quot;title&quot;: {
+                  &quot;type&quot;: &quot;string&quot;
+               }
+            }
+         }
+      }
+   }
+}
+</code></pre><h4 id="删除索引-或记录"><a href="#删除索引-或记录" class="headerlink" title="删除索引/或记录"></a>删除索引/或记录</h4><p>DELETE请求:     localhost:9200/index名</p>
+<p>DELETE请求:     localhost:9200/index名/type名/id</p>
+<h4 id="添加记录-更新"><a href="#添加记录-更新" class="headerlink" title="添加记录/更新"></a>添加记录/更新</h4><p>PUT请求,需要带上id   localhost:9200/index名/type名/id</p>
+<p>请求体</p>
+<pre><code class="bash">{
+  &quot;user&quot;: &quot;张三&quot;,
+  &quot;title&quot;: &quot;工程师&quot;,
+  &quot;desc&quot;: &quot;数据库管理&quot;
+}
+</code></pre>
+<p>POST请求 ,不需要带ID,系统自动分配ID   localhost:9200/index名/type名</p>
+<h4 id="查询"><a href="#查询" class="headerlink" title="查询"></a>查询</h4><p>GET请求  /Index/Type/_search或者ID</p>
+<pre><code class="js">GET /my_index/my_type/_search
+{
+  &quot;query&quot;: {
+    &quot;bool&quot;: {
+      &quot;must&quot;:     { &quot;match&quot;: { &quot;title&quot;: &quot;quick&quot; }},
+      &quot;must_not&quot;: { &quot;match&quot;: { &quot;title&quot;: &quot;lazy&quot;  }},
+      &quot;should&quot;: [
+                  { &quot;match&quot;: { &quot;title&quot;: &quot;brown&quot; }},
+                  { &quot;match&quot;: { &quot;title&quot;: &quot;dog&quot;   }}
+      ]
+    }
+  }
+}
+</code></pre>
+<p>空值查询</p>
+<pre><code class="javascript"> &quot;query&quot;: {
+        &quot;bool&quot;: {
+            &quot;must_not&quot;: {
+                &quot;exists&quot;: {
+                    &quot;field&quot;: &quot;enttype_code&quot;
+                }
+            }
+        }
+    }
+</code></pre>
+<p>非空查询</p>
+<pre><code class="javascript"> &quot;query&quot;: {
+        &quot;bool&quot;: {
+            &quot;must&quot;: {
+                &quot;exists&quot;: {
+                    &quot;field&quot;: &quot;enttype_code&quot;
+                }
+            }
+        }
+    }
+</code></pre>
+<p>范围查询</p>
+<pre><code class="java">&quot;query&quot;: {
+    &quot;bool&quot;: {
+
+    },
+    &quot;range&quot;: {
+      &quot;FIELD&quot;: {
+        &quot;gte&quot;: 10,
+        &quot;lte&quot;: 20
+      }
+    }
+  }
+</code></pre>
+<p>排序</p>
+<pre><code class="javascript"> &quot;sort&quot;: [
+    {
+      &quot;FIELD&quot;: {
+        &quot;order&quot;: &quot;desc&quot;
+      }
+    }
+  ]
+</code></pre>
+<p>高亮搜索</p>
+<pre><code> &quot;highlight&quot;: {
+    &quot;fields&quot;: {
+      &quot;title&quot;:{}
+    }
+  }
+</code></pre><pre><code>{
+        &quot;_index&quot;: &quot;book&quot;,
+        &quot;_type&quot;: &quot;chinese&quot;,
+        &quot;_id&quot;: &quot;2&quot;,
+        &quot;_score&quot;: 1.5686159,
+        &quot;_source&quot;: {
+          &quot;id&quot;: 2,
+          &quot;title&quot;: &quot;初中语文&quot;,
+          &quot;content&quot;: &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZ&quot;,
+          &quot;price&quot;: 25.23,
+          &quot;createTime&quot;: &quot;2019-06-15 12:23:23&quot;
+        },
+        &quot;highlight&quot;: {
+          &quot;title&quot;: [
+            &quot;&lt;em&gt;初中&lt;/em&gt;&lt;em&gt;语文&lt;/em&gt;&quot;
+          ]
+        }
+      },
+</code></pre><p>自定义高亮</p>
+<pre><code> &quot;highlight&quot;: {
+    &quot;fields&quot;: {
+      &quot;title&quot;:{
+        &quot;pre_tags&quot;: [
+          &quot;&lt;font color=&#39;red&#39;&gt;&quot;
+        ],
+        &quot;post_tags&quot;: [
+          &quot;&lt;/font&gt;&quot;
+        ]
+      }
+    }
+  }
+</code></pre><p>pre_tags:前标签</p>
+<p>post_tags:后标签</p>
+<p>分页</p>
+<pre><code class="javascript">&quot;from&quot;: 0,
+&quot;size&quot;: 1
+</code></pre>
+<p>聚合</p>
+<p>每个activityBrandId的条数</p>
+<pre><code class="javascript">{
+  &quot;aggs&quot;: {
+    &quot;bids&quot;: {
+      &quot;terms&quot;: {
+        &quot;field&quot;: &quot;activityBrandId&quot; 
+      }
+    }
+  }
+}
+</code></pre>
+<pre><code class="javascript">&quot;aggregations&quot;: {
+    &quot;bids&quot;: {
+      &quot;doc_count_error_upper_bound&quot;: 0,
+      &quot;sum_other_doc_count&quot;: 0,
+      &quot;buckets&quot;: [
+        {
+          &quot;key&quot;: 0,
+          &quot;doc_count&quot;: 670
+        },
+        {
+          &quot;key&quot;: 1001,
+          &quot;doc_count&quot;: 4
+        },
+        {
+          &quot;key&quot;: 1002,
+          &quot;doc_count&quot;: 4
+        },
+        {
+          &quot;key&quot;: 1000,
+          &quot;doc_count&quot;: 1
+        }
+      ]
+    }
+  }
+</code></pre>
+<p>只查询某字段</p>
+<pre><code class="javascript">&quot;_source&quot;: [&quot;activityBrandId&quot;,&quot;&quot;]
+</code></pre>
+<p>聚合查询</p>
+<pre><code class="js">{
+  &quot;size&quot;: 0,不包含数据,只包含聚合相关
+  &quot;aggs&quot;: {
+    &quot;别名&quot;: {
+      &quot;min(最小值)&quot;: {
+        &quot;field&quot;: &quot;字段&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<h4 id="测试分词器"><a href="#测试分词器" class="headerlink" title="测试分词器"></a>测试分词器</h4><p>POST请求  localhost:9200/_analyze</p>
+<pre><code>{
+  &quot;analyzer&quot;: &quot;ik_max_word&quot;,
+  &quot;text&quot;: &quot;中华人民共和国国歌&quot;
+}
+</code></pre><pre><code>{
+    &quot;tokens&quot;: [
+        {
+            &quot;token&quot;: &quot;中华人民共和国&quot;,
+            &quot;start_offset&quot;: 0,
+            &quot;end_offset&quot;: 7,
+            &quot;type&quot;: &quot;CN_WORD&quot;,
+            &quot;position&quot;: 0
+        },
+        {
+            &quot;token&quot;: &quot;中华人民&quot;,
+            &quot;start_offset&quot;: 0,
+            &quot;end_offset&quot;: 4,
+            &quot;type&quot;: &quot;CN_WORD&quot;,
+            &quot;position&quot;: 1
+        },
+        {
+            &quot;token&quot;: &quot;中华&quot;,
+            &quot;start_offset&quot;: 0,
+            &quot;end_offset&quot;: 2,
+            &quot;type&quot;: &quot;CN_WORD&quot;,
+            &quot;position&quot;: 2
+        },
+        {
+            &quot;token&quot;: &quot;华人&quot;,
+            &quot;start_offset&quot;: 1,
+            &quot;end_offset&quot;: 3,
+            &quot;type&quot;: &quot;CN_WORD&quot;,
+            &quot;position&quot;: 3
+        },
+        {
+            &quot;token&quot;: &quot;人民共和国&quot;,
+            &quot;start_offset&quot;: 2,
+            &quot;end_offset&quot;: 7,
+            &quot;type&quot;: &quot;CN_WORD&quot;,
+            &quot;position&quot;: 4
+        },
+        {
+            &quot;token&quot;: &quot;人民&quot;,
+            &quot;start_offset&quot;: 2,
+            &quot;end_offset&quot;: 4,
+            &quot;type&quot;: &quot;CN_WORD&quot;,
+            &quot;position&quot;: 5
+        },
+        {
+            &quot;token&quot;: &quot;共和国&quot;,
+            &quot;start_offset&quot;: 4,
+            &quot;end_offset&quot;: 7,
+            &quot;type&quot;: &quot;CN_WORD&quot;,
+            &quot;position&quot;: 6
+        },
+        {
+            &quot;token&quot;: &quot;共和&quot;,
+            &quot;start_offset&quot;: 4,
+            &quot;end_offset&quot;: 6,
+            &quot;type&quot;: &quot;CN_WORD&quot;,
+            &quot;position&quot;: 7
+        },
+        {
+            &quot;token&quot;: &quot;国&quot;,
+            &quot;start_offset&quot;: 6,
+            &quot;end_offset&quot;: 7,
+            &quot;type&quot;: &quot;CN_CHAR&quot;,
+            &quot;position&quot;: 8
+        },
+        {
+            &quot;token&quot;: &quot;国歌&quot;,
+            &quot;start_offset&quot;: 7,
+            &quot;end_offset&quot;: 9,
+            &quot;type&quot;: &quot;CN_WORD&quot;,
+            &quot;position&quot;: 9
+        }
+    ]
+}
+</code></pre><p>1、ik_max_word</p>
+<p>会将文本做最细粒度的拆分，比如会将“中华人民共和国人民大会堂”拆分为“中华人民共和国、中华人民、中华、华人、人民共和国、人民、共和国、大会堂、大会、会堂等词语。</p>
+<p>2、ik_smart</p>
+<p>会做最粗粒度的拆分，比如会将“中华人民共和国人民大会堂”拆分为中华人民共和国、人民大会堂。</p>
+<h4 id="springboot整合elasticsearch"><a href="#springboot整合elasticsearch" class="headerlink" title="springboot整合elasticsearch"></a>springboot整合elasticsearch</h4><h5 id="1-引入依赖"><a href="#1-引入依赖" class="headerlink" title="1.引入依赖"></a>1.引入依赖</h5><pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-data-elasticsearch&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre><h5 id="2-application-properties"><a href="#2-application-properties" class="headerlink" title="2.application.properties"></a>2.application.properties</h5><pre><code>spring.data.elasticsearch.cluster-name=elasticsearch
+spring.data.elasticsearch.cluster-nodes=127.0.0.1:9300
+spring.data.elasticsearch.repositories.enabled=true
+</code></pre><h5 id="3-创建实体类"><a href="#3-创建实体类" class="headerlink" title="3.创建实体类"></a>3.创建实体类</h5><pre><code>@Document(indexName = &quot;goods_index&quot;,type = &quot;goods&quot;)
+public class Goods {
+    @Id
+    private Integer id;
+    @Field(type= FieldType.Text,store = true,analyzer = &quot;ik_max_word&quot;)
+    private String name;
+    @Field(type= FieldType.Text,store = true,analyzer = &quot;ik_max_word&quot;)
+    private String attrName;
+    @Field(type= FieldType.Text,store = true,analyzer = &quot;ik_max_word&quot;)
+    private String desc;
+    @Field(type= FieldType.Integer,store = true,analyzer = &quot;ik_max_word&quot;)
+    private Integer stock;
+    @Field(type= FieldType.Double,store = true,analyzer = &quot;ik_max_word&quot;)
+    private BigDecimal price;
+</code></pre><p>Spring Data通过注解来声明字段的映射属性，有下面的三个注解：</p>
+<p>@Document 作用在类，标记实体类为文档对象，一般有两个属性<br>​    indexName：对应索引库名称<br>​    type：对应在索引库中的类型<br>​    shards：分片数量，默认5<br>​    replicas：副本数量，默认1<br>@Id 作用在成员变量，标记一个字段作为id主键<br>@Field 作用在成员变量，标记为文档的字段，并指定字段映射属性：<br>​    type：字段类型，是枚举：FieldType，可以是text、long、short、date、integer、object等<br>​        text：存储数据时候，会自动分词，并生成索引<br>​        keyword：存储数据时候，不会分词建立索引<br>​        Numerical：数值类型，分两类<br>​        基本数据类型：long、interger、short、byte、double、float、half_float<br>​        浮点数的高精度类型：scaled_float需要指定一个精度因子，比如10或100。elasticsearch会把真实值乘以这个因子后存储，取出时再还原。<br>​        Date：日期类型elasticsearch可以对日期格式化为字符串存储，但是建议我们存储为毫秒值，存储为long，节省空间。<br>​    index：是否索引，布尔类型，默认是true<br>​    store：是否存储，布尔类型，默认是false</p>
+<p>​    analyzer：分词器名称，这里的ik_max_word即使用ik分词器</p>
+<p>日期类型:需要加上注解(使用jackson将对象转为json数据)</p>
+<pre><code class="java">@JsonFormat(shape = JsonFormat.Shape.STRING, pattern =&quot;yyyy-MM-dd HH:mm:ss&quot;,timezone=&quot;GMT+8&quot;)
+private Date createTime;
+</code></pre>
+<p><strong>在使用时,注解会在生成index时,配置映射</strong></p>
+<h5 id="4-提供template-操作索引-添加索引-删除索引"><a href="#4-提供template-操作索引-添加索引-删除索引" class="headerlink" title="4.提供template,操作索引,添加索引,删除索引"></a>4.提供template,操作索引,添加索引,删除索引</h5><pre><code>//创建索引
+elasticsearchTemplate.createIndex(Goods.class);
+//添加隐射
+elasticsearchTemplate.putMapping(Goods.class);
+</code></pre><h5 id="5-接口继承ElasticsearchRepository-提供一系列对document的操作"><a href="#5-接口继承ElasticsearchRepository-提供一系列对document的操作" class="headerlink" title="5.接口继承ElasticsearchRepository,提供一系列对document的操作"></a>5.接口继承ElasticsearchRepository,提供一系列对document的操作</h5><pre><code>@Repository
+public interface GoodsRepository extends ElasticsearchRepository&lt;Goods,Integer&gt; {
+}
+</code></pre><h6 id="CRUD操作"><a href="#CRUD操作" class="headerlink" title="CRUD操作"></a>CRUD操作</h6><pre><code>&lt;S extends T&gt; S save(S var1);
+
+&lt;S extends T&gt; Iterable&lt;S&gt; saveAll(Iterable&lt;S&gt; var1);
+
+Optional&lt;T&gt; findById(ID var1);
+
+boolean existsById(ID var1);
+
+Iterable&lt;T&gt; findAll();
+
+Iterable&lt;T&gt; findAllById(Iterable&lt;ID&gt; var1);
+
+long count();
+
+void deleteById(ID var1);
+
+void delete(T var1);
+
+void deleteAll(Iterable&lt;? extends T&gt; var1);
+
+void deleteAll();
+</code></pre><p><strong>自定义方法</strong></p>
+<p>Spring Data 的另一个强大功能，是根据方法名称自动实现功能。在自己的repository中写上该方法</p>
+<p>比如：你的方法名叫做：findByTitle，那么它就知道你是根据title查询，然后自动帮你完成，无需写实现类。</p>
+<p>当然，方法名称要符合一定的约定：</p>
+<pre><code>Keyword                                Sample
+And                                findByNameAndPrice
+Or                                findByNameOrPrice
+Is                                findByName
+Not                                findByNameNot
+Between                            findByPriceBetween
+LessThanEqual                    findByPriceLessThan
+GreaterThanEqual                findByPriceGreaterThan
+Before                            findByPriceBefore
+After                            findByPriceAfter
+Like                            findByNameLike
+StartingWith                    findByNameStartingWith
+EndingWith                        findByNameEndingWith
+Contains/Containing                findByNameContaining
+In                                findByNameIn(Collection&lt;String&gt;names)
+NotIn                            findByNameNotIn(Collection&lt;String&gt;names)
+Near                            findByStoreNear
+True                            findByAvailableTrue
+False                            findByAvailableFalse
+OrderBy                            findByAvailableTrueOrderByNameDesc
+</code></pre><h6 id="条件查询"><a href="#条件查询" class="headerlink" title="条件查询"></a>条件查询</h6><pre><code>&lt;S extends T&gt; S index(S var1);
+
+Iterable&lt;T&gt; search(QueryBuilder var1);
+
+Page&lt;T&gt; search(QueryBuilder var1, Pageable var2);
+
+Page&lt;T&gt; search(SearchQuery var1);
+
+Page&lt;T&gt; searchSimilar(T var1, String[] var2, Pageable var3);
+
+void refresh();
+
+Class&lt;T&gt; getEntityClass();
+</code></pre><p>NativeSearchQueryBuilder：Spring提供的一个查询条件构建器，帮助构建json格式的请求体</p>
+<pre><code>queryBuilder.withQuery(QueryBuilder queryBuilder);查询条件
+queryBuilder.withPageable(Pageable pageable);分页条件
+queryBuilder.withSort(SortBuilder sortBuilder);排序条件
+repository.search(queryBuilder.build());
+
+</code></pre><p>QueryBuilders：利用QueryBuilders来生成一个查询。QueryBuilders提供了大量的静态方法，用于生成各种不同类型的查询.</p>
+<pre><code class="Java">//匹配查询,先分词,在查询
+MatchQueryBuilder matchQueryBuilder = QueryBuilders.matchQuery(&quot;name&quot;,&quot;手机oppo&quot;);
+//词条查询,不会分词,直接查询,也可以叫等值查询
+TermQueryBuilder termQueryBuilder = QueryBuilders.termQuery(&quot;stock&quot;,100);
+ //布尔查询,创建多个查询条件
+BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+//        must 相当于 与
+//        must not 相当于 非
+//        should 相当于 或
+//        filter  过滤
+ boolQueryBuilder.must(matchQueryBuilder);
+  boolQueryBuilder.must(termQueryBuilder);
+//相似度查询
+FuzzyQueryBuilder fuzzyQueryBuilder = QueryBuilders.fuzzyQuery(&quot;name&quot;,&quot;华为手机&quot;);
+//查询所有
+MatchAllQueryBuilder matchAllQueryBuilder = QueryBuilders.matchAllQuery();
+//正则表达式查询
+RegexpQueryBuilder regexpQueryBuilder = QueryBuilders.regexpQuery(&quot;name&quot;,&quot;&quot;);
+//模糊查询,* 表示0到多个字符，？表示一个字符
+WildcardQueryBuilder wildcardQueryBuilder = QueryBuilders.wildcardQuery(&quot;name&quot;,&quot;*手机*&quot;);
+//范围查询
+RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(&quot;stock&quot;);
+rangeQueryBuilder.gt(100);
+rangeQueryBuilder.lt(105);
+</code></pre>
+<p>SortBuilders:用于生成排序条件</p>
+<pre><code>SortBuilders.fieldSort(&quot;stock&quot;).order(SortOrder.ASC)
+</code></pre><p>PageRequest:用于生成分页条件</p>
+<pre><code>PageRequest.of(0, 10)
+</code></pre><p>例子:</p>
+<pre><code class="java">//Spring提供的一个查询条件构建器，帮助构建json格式的请求体
+NativeSearchQueryBuilder queryBuilder=new NativeSearchQueryBuilder();
+//匹配查询,先分词,在查询
+MatchQueryBuilder matchQueryBuilder = QueryBuilders.matchQuery(&quot;name&quot;,&quot;手机oppo&quot;);
+//词条查询,不会分词,直接查询
+TermQueryBuilder termQueryBuilder = QueryBuilders.termQuery(&quot;stock&quot;,100);
+//布尔查询,创建多个查询条件
+BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+boolQueryBuilder.must(matchQueryBuilder);
+boolQueryBuilder.must(termQueryBuilder);
+queryBuilder.withQuery(boolQueryBuilder);
+queryBuilder.withPageable(PageRequest.of(0, 10));
+queryBuilder.withSort(SortBuilders.fieldSort(&quot;stock&quot;).order(SortOrder.ASC));
+Page&lt;Goods&gt; search = goodsRepository.search(queryBuilder.build());
+</code></pre>
+<h6 id="高亮查询"><a href="#高亮查询" class="headerlink" title="高亮查询"></a>高亮查询</h6><p>默认的DefaultResultMapper不支持高亮展示</p>
+<p>重写该方法</p>
+<pre><code class="Java">package com.example.elasticsearch.search;
+
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import org.apache.commons.beanutils.PropertyUtils;
+import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetItemResponse;
+import org.elasticsearch.action.get.MultiGetResponse;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.document.DocumentField;
+import org.elasticsearch.common.text.Text;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.ScriptedField;
+import org.springframework.data.elasticsearch.core.AbstractResultMapper;
+import org.springframework.data.elasticsearch.core.DefaultEntityMapper;
+import org.springframework.data.elasticsearch.core.EntityMapper;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
+import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
+import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
+import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
+
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.Charset;
+import java.util.*;
+
+@Component
+public class ExtResultMapper extends AbstractResultMapper {
+
+    private final MappingContext&lt;? extends ElasticsearchPersistentEntity&lt;?&gt;, ElasticsearchPersistentProperty&gt; mappingContext;
+
+    public ExtResultMapper() {
+        this(new SimpleElasticsearchMappingContext());
+    }
+
+    public ExtResultMapper(MappingContext&lt;? extends ElasticsearchPersistentEntity&lt;?&gt;, ElasticsearchPersistentProperty&gt; mappingContext) {
+
+        super(new DefaultEntityMapper(mappingContext));
+
+        Assert.notNull(mappingContext, &quot;MappingContext must not be null!&quot;);
+
+        this.mappingContext = mappingContext;
+    }
+
+    public ExtResultMapper(EntityMapper entityMapper) {
+        this(new SimpleElasticsearchMappingContext(), entityMapper);
+    }
+
+    public ExtResultMapper(
+            MappingContext&lt;? extends ElasticsearchPersistentEntity&lt;?&gt;, ElasticsearchPersistentProperty&gt; mappingContext,
+            EntityMapper entityMapper) {
+
+        super(entityMapper);
+
+        Assert.notNull(mappingContext, &quot;MappingContext must not be null!&quot;);
+
+        this.mappingContext = mappingContext;
+    }
+
+    @Override
+    public &lt;T&gt; AggregatedPage&lt;T&gt; mapResults(SearchResponse response, Class&lt;T&gt; clazz, Pageable pageable) {
+
+        long totalHits = response.getHits().getTotalHits();
+        float maxScore = response.getHits().getMaxScore();
+
+        List&lt;T&gt; results = new ArrayList&lt;&gt;();
+        for (SearchHit hit : response.getHits()) {
+            if (hit != null) {
+                T result = null;
+                if (!StringUtils.isEmpty(hit.getSourceAsString())) {
+                    result = mapEntity(hit.getSourceAsString(), clazz);
+                } else {
+                    result = mapEntity(hit.getFields().values(), clazz);
+                }
+
+                setPersistentEntityId(result, hit.getId(), clazz);
+                setPersistentEntityVersion(result, hit.getVersion(), clazz);
+                setPersistentEntityScore(result, hit.getScore(), clazz);
+
+                populateScriptFields(result, hit);
+
+                results.add(result);
+            }
+        }
+
+        return new AggregatedPageImpl&lt;T&gt;(results, pageable, totalHits, response.getAggregations(), response.getScrollId(),
+                maxScore);
+    }
+
+    private String concat(Text[] texts) {
+        StringBuilder sb = new StringBuilder();
+        for (Text text : texts) {
+            sb.append(text.toString());
+        }
+        return sb.toString();
+    }
+
+
+    private &lt;T&gt; void populateScriptFields(T result, SearchHit hit) {
+        if (hit.getFields() != null &amp;&amp; !hit.getFields().isEmpty() &amp;&amp; result != null) {
+            for (java.lang.reflect.Field field : result.getClass().getDeclaredFields()) {
+                ScriptedField scriptedField = field.getAnnotation(ScriptedField.class);
+                if (scriptedField != null) {
+                    String name = scriptedField.name().isEmpty() ? field.getName() : scriptedField.name();
+                    DocumentField searchHitField = hit.getFields().get(name);
+                    if (searchHitField != null) {
+                        field.setAccessible(true);
+                        try {
+                            field.set(result, searchHitField.getValue());
+                        } catch (IllegalArgumentException e) {
+                            throw new ElasticsearchException(
+                                    &quot;failed to set scripted field: &quot; + name + &quot; with value: &quot; + searchHitField.getValue(), e);
+                        } catch (IllegalAccessException e) {
+                            throw new ElasticsearchException(&quot;failed to access scripted field: &quot; + name, e);
+                        }
+                    }
+                }
+            }
+        }
+
+        for (HighlightField field : hit.getHighlightFields().values()) {
+            try {
+                PropertyUtils.setProperty(result, field.getName(), concat(field.fragments()));
+            } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
+                throw new ElasticsearchException(&quot;failed to set highlighted value for field: &quot; + field.getName()
+                        + &quot; with value: &quot; + Arrays.toString(field.getFragments()), e);
+            }
+        }
+    }
+
+    private &lt;T&gt; T mapEntity(Collection&lt;DocumentField&gt; values, Class&lt;T&gt; clazz) {
+        return mapEntity(buildJSONFromFields(values), clazz);
+    }
+
+    private String buildJSONFromFields(Collection&lt;DocumentField&gt; values) {
+        JsonFactory nodeFactory = new JsonFactory();
+        try {
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            JsonGenerator generator = nodeFactory.createGenerator(stream, JsonEncoding.UTF8);
+            generator.writeStartObject();
+            for (DocumentField value : values) {
+                if (value.getValues().size() &gt; 1) {
+                    generator.writeArrayFieldStart(value.getName());
+                    for (Object val : value.getValues()) {
+                        generator.writeObject(val);
+                    }
+                    generator.writeEndArray();
+                } else {
+                    generator.writeObjectField(value.getName(), value.getValue());
+                }
+            }
+            generator.writeEndObject();
+            generator.flush();
+            return new String(stream.toByteArray(), Charset.forName(&quot;UTF-8&quot;));
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public &lt;T&gt; T mapResult(GetResponse response, Class&lt;T&gt; clazz) {
+        T result = mapEntity(response.getSourceAsString(), clazz);
+        if (result != null) {
+            setPersistentEntityId(result, response.getId(), clazz);
+            setPersistentEntityVersion(result, response.getVersion(), clazz);
+        }
+        return result;
+    }
+
+    @Override
+    public &lt;T&gt; LinkedList&lt;T&gt; mapResults(MultiGetResponse responses, Class&lt;T&gt; clazz) {
+        LinkedList&lt;T&gt; list = new LinkedList&lt;&gt;();
+        for (MultiGetItemResponse response : responses.getResponses()) {
+            if (!response.isFailed() &amp;&amp; response.getResponse().isExists()) {
+                T result = mapEntity(response.getResponse().getSourceAsString(), clazz);
+                setPersistentEntityId(result, response.getResponse().getId(), clazz);
+                setPersistentEntityVersion(result, response.getResponse().getVersion(), clazz);
+                list.add(result);
+            }
+        }
+        return list;
+    }
+
+    private &lt;T&gt; void setPersistentEntityId(T result, String id, Class&lt;T&gt; clazz) {
+
+        if (clazz.isAnnotationPresent(Document.class)) {
+
+            ElasticsearchPersistentEntity&lt;?&gt; persistentEntity = mappingContext.getRequiredPersistentEntity(clazz);
+            ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
+
+            // Only deal with String because ES generated Ids are strings !
+            if (idProperty != null &amp;&amp; idProperty.getType().isAssignableFrom(String.class)) {
+                persistentEntity.getPropertyAccessor(result).setProperty(idProperty, id);
+            }
+        }
+    }
+
+    private &lt;T&gt; void setPersistentEntityVersion(T result, long version, Class&lt;T&gt; clazz) {
+
+        if (clazz.isAnnotationPresent(Document.class)) {
+
+            ElasticsearchPersistentEntity&lt;?&gt; persistentEntity = mappingContext.getPersistentEntity(clazz);
+            ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
+
+            // Only deal with Long because ES versions are longs !
+            if (versionProperty != null &amp;&amp; versionProperty.getType().isAssignableFrom(Long.class)) {
+                // check that a version was actually returned in the response, -1 would indicate that
+                // a search didn&#39;t request the version ids in the response, which would be an issue
+                Assert.isTrue(version != -1, &quot;Version in response is -1&quot;);
+                persistentEntity.getPropertyAccessor(result).setProperty(versionProperty, version);
+            }
+        }
+    }
+
+    private &lt;T&gt; void setPersistentEntityScore(T result, float score, Class&lt;T&gt; clazz) {
+
+        if (clazz.isAnnotationPresent(Document.class)) {
+
+            ElasticsearchPersistentEntity&lt;?&gt; entity = mappingContext.getRequiredPersistentEntity(clazz);
+
+            if (!entity.hasScoreProperty()) {
+                return;
+            }
+
+            entity.getPropertyAccessor(result) //
+                    .setProperty(entity.getScoreProperty(), score);
+        }
+    }
+}
+</code></pre>
+<pre><code class="Java">nativeSearchQueryBuilder.withHighlightFields( new HighlightBuilder.Field(&quot;title&quot;).preTags(&quot;&lt;span style=\&quot;color:red\&quot;&gt;&quot;).postTags(&quot;&lt;/span&gt;&quot;));
+
+//高亮显示
+AggregatedPage&lt;BookIndex&gt; bookIndices = elasticsearchTemplate.queryForPage(searchQuery, BookIndex.class, extResultMapper);
+bookIndices.getContent().forEach(System.out::println);
+</code></pre>
+<h6 id="聚合查询"><a href="#聚合查询" class="headerlink" title="聚合查询"></a>聚合查询</h6><p>cs为别名</p>
+<p>minPrice为聚合字段</p>
+<p>查询query包含min,max,avg等</p>
+<pre><code class="Java">NativeSearchQueryBuilder searchQueryBuilder = new NativeSearchQueryBuilder();
+StatsAggregationBuilder statsAggregationBuilder =new StatsAggregationBuilder(&quot;cs&quot;);
+statsAggregationBuilder.field(&quot;minPrice&quot;);
+searchQueryBuilder.withIndices(&quot;xw_product&quot;)
+        .withTypes(&quot;type_product&quot;)
+        .addAggregation(statsAggregationBuilder);
+Aggregations query = elasticsearchTemplate.query(searchQueryBuilder.build(), new ResultsExtractor&lt;Aggregations&gt;() {
+    @Override
+    public Aggregations extract(SearchResponse searchResponse) {
+        return searchResponse.getAggregations();
+    }
+});
+</code></pre>
+</div><div class="post-copyright"><blockquote><p>原文作者: mjy</p><p>原文链接: <a href="http://blog.moujiangyong.com/2018/07/12/安装elasticsearch/">http://blog.moujiangyong.com/2018/07/12/安装elasticsearch/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2018/07/12/uniapp/" class="pre">学习前端的总结样式</a><a href="/2018/07/12/链接汇总/" class="next">链接</a></div><div id="comments"></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#安装elasticsearch"><span class="toc-text">安装elasticsearch</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#elasticsearch的关键词"><span class="toc-text">elasticsearch的关键词</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#安装KIbana"><span class="toc-text">安装KIbana</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#数据类型"><span class="toc-text">数据类型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#查询版本"><span class="toc-text">查询版本</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#创建索引"><span class="toc-text">创建索引</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#创建索引并映射"><span class="toc-text">创建索引并映射</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#查询映射"><span class="toc-text">查询映射</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#删除索引-或记录"><span class="toc-text">删除索引/或记录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#添加记录-更新"><span class="toc-text">添加记录/更新</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#查询"><span class="toc-text">查询</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#测试分词器"><span class="toc-text">测试分词器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#springboot整合elasticsearch"><span class="toc-text">springboot整合elasticsearch</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1-引入依赖"><span class="toc-text">1.引入依赖</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2-application-properties"><span class="toc-text">2.application.properties</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#3-创建实体类"><span class="toc-text">3.创建实体类</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#4-提供template-操作索引-添加索引-删除索引"><span class="toc-text">4.提供template,操作索引,添加索引,删除索引</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#5-接口继承ElasticsearchRepository-提供一系列对document的操作"><span class="toc-text">5.接口继承ElasticsearchRepository,提供一系列对document的操作</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#CRUD操作"><span class="toc-text">CRUD操作</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#条件查询"><span class="toc-text">条件查询</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#高亮查询"><span class="toc-text">高亮查询</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#聚合查询"><span class="toc-text">聚合查询</span></a></li></ol></li></ol></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/09/21/JVM 配置常用参数和常用 GC 调优策略(转)/">jvm常用配置(转)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/01/开源项目/">开源项目</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/07/02/Linux安装环境/">Linux安装环境</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/17/String/">String.format()方法的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/30/常用递归的使用/">常用递归的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/23/feign和restTemplate的使用/">okhttp,feign,restTemplate的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/21/Java虚拟机调优/">Java虚拟机调优</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/logback的使用/">springboot-logback的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/21/spring-cloud之权限/">spring-cloud之权限</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/01/spring-cloud之链路追踪/">spring-cloud之链路追踪</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JVM/">JVM</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/http请求/">http请求</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/java8/">java8</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springboot/">springboot</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springcloud/">springcloud</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/前端/">前端</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客/">博客</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/搜索引擎/">搜索引擎</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/笔记/">笔记</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/线程/">线程</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/递归/">递归</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/项目/">项目</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/spring-cloud/" style="font-size: 15px;">spring cloud</a> <a href="/tags/资料/" style="font-size: 15px;">资料</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li></ul></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/baidusitemap.xml">网站地图</a> |  <a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><a href="https://beian.miit.gov.cn " rel="nofollow">蜀ICP备19003737号</a></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>

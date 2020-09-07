@@ -1,0 +1,412 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="jiangyong's blog."><meta name="keywords" content="学习,记录,笔记"><title>VUE的使用 | 听雨时的忧愁</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">VUE的使用</h1><a id="logo" href="/.">听雨时的忧愁</a><p class="description">天下武功,唯快不破</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><div id="search-result"></div></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">VUE的使用</h1><div class="post-meta"><a href="/2018/07/12/VUE/#comments" class="comment-count"></a><p><span class="date">Jul 12, 2018</span><span><a href="/categories/前端/" class="category">前端</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><h4 id="1-创建项目"><a href="#1-创建项目" class="headerlink" title="1.创建项目:"></a>1.创建项目:</h4><pre><code>npm install --global vue-cli
+</code></pre><p>​     </p>
+<pre><code>vue init webpack my-project
+</code></pre><p>修改三处:</p>
+<pre><code>将config文件夹里面的index.js中的assetsPublicPath的值修改 为“./”，
+webpack.prod.conf.js 中output添加参数publicPath:’./’ 
+在webpack.base.conf.js里 publicPath: process.env.NODE_ENV === ‘production’ ? ‘./’ +config.build.assetsPublicPath : ‘./’ + config.dev.assetsPublicPath
+</code></pre><pre><code>//    ...(config.dev.useEslint ? [createLintingRule()] : []),
+将下划线处注释掉，这样关闭代码规范验证就可以了，否则在vue-cli中会导致无法运行项目
+</code></pre><h4 id="2-组件引用"><a href="#2-组件引用" class="headerlink" title="2.组件引用"></a>2.组件引用</h4><pre><code class="vue">&lt;template&gt;
+  &lt;div&gt;
+  &lt;head-vue&gt;&lt;/head-vue&gt;
+  &lt;bodyVue&gt;&lt;/bodyVue&gt;
+  &lt;footVue&gt;&lt;/footVue&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+//导入组件
+import headVue from &#39;./head.vue&#39;
+import bodyVue from &#39;./body.vue&#39;
+import footVue from &#39;./foot.vue&#39;
+export default {
+  name:&#39;HelloWorld&#39;,
+  data () {
+    return {
+
+    }
+  },
+  //声明组件
+  components:{
+  headVue:headVue,
+  bodyVue,
+  footVue
+  }
+}
+&lt;/script&gt;
+
+
+&lt;style scoped&gt;
+
+&lt;/style&gt;
+</code></pre>
+<h4 id="3-全局组件的使用"><a href="#3-全局组件的使用" class="headerlink" title="3.全局组件的使用"></a>3.全局组件的使用</h4><p>在main.js中</p>
+<pre><code class="vue">import headVue from &#39;./head.vue&#39;
+import bodyVue from &#39;./body.vue&#39;
+import footVue from &#39;./foot.vue&#39;
+
+
+
+Vue.component(&#39;headVue&#39;,headVue)
+Vue.component(&#39;bodyVue&#39;,bodyVue)
+Vue.component(&#39;footVue&#39;,footVue)
+
+</code></pre>
+<h4 id="4-组件传值"><a href="#4-组件传值" class="headerlink" title="4.组件传值"></a>4.组件传值</h4><h5 id="父组件向子组件传值"><a href="#父组件向子组件传值" class="headerlink" title="父组件向子组件传值"></a>父组件向子组件传值</h5><p>在子组件中写</p>
+<p>props:[‘传入的变量’],</p>
+<p>props: {<br>​            disabled: {<br>​                type: Boolean,<br>​                default: false<br>​            }<br>​        },</p>
+<p>在父组件中</p>
+<p><head-vue text="值"></head-vue></p>
+<p>或者</p>
+<p><head-vue :text="value"></head-vue></p>
+<p>在</p>
+<p>data(){</p>
+<p>return{</p>
+<p>value:’值’ }</p>
+<p>}</p>
+<h5 id="子组件向父组件传值"><a href="#子组件向父组件传值" class="headerlink" title="子组件向父组件传值"></a>子组件向父组件传值</h5><p>在子组件上的事件方法上使用this.$emit(“名”,”值”):</p>
+<pre><code>this.$emit(&#39;send-message&#39;, {
+                        type: &#39;text&#39;,
+                        content: that.inputValue
+                    });
+</code></pre><p>在父组件使用@send-message=”getMessage”,</p>
+<pre><code>getMessage(data){ var content = data.content }
+</code></pre><h5 id="子组件父组件双向传值"><a href="#子组件父组件双向传值" class="headerlink" title="子组件父组件双向传值"></a>子组件父组件双向传值</h5><p>在子组件</p>
+<pre><code>props: {
+            value: {
+                type: Boolean,
+                default: false
+            }
+        },
+
+watch: {
+            value(newVal) {
+                this.disabled = newVal;
+            }
+        },
+
+
+
+panelShow() {
+                this.disabled = false
+                this.$emit(&#39;input&#39;, false);
+            },
+</code></pre><p>父组件</p>
+<pre><code>&lt;dia-log v-model=&quot;disable&quot; @getKuaidi=&quot;getKuaidi($event)&quot;&gt;&lt;/dia-log&gt;
+</code></pre><h4 id="v-model解释"><a href="#v-model解释" class="headerlink" title="v-model解释"></a>v-model解释</h4><p>v-model等同于 在子组件 prop:[‘value’],以及发送一个方法 this.$emit(‘input’, newValue)</p>
+<h4 id="5-路由"><a href="#5-路由" class="headerlink" title="5.路由:"></a>5.路由:</h4><pre><code>- 1:下载 `npm i vue-router -S`
+- 2:在main.js中引入 `import VueRouter from &#39;vue-router&#39;;`
+- 3:安装插件 `Vue.use(VueRouter);`
+- 4:创建路由对象并配置路由规则
+    + `let router = new VueRouter({ routes:[ {path:&#39;/home&#39;,component:Home}  ]   });`
+- 5:将其路由对象传递给Vue的实例，options中
+    + options中加入 `router:router`
+- 6:在app.vue中留坑 ` &lt;router-view&gt;&lt;/router-view&gt;
+</code></pre><pre><code> &lt;router-link to=&quot;/beijing&quot;&gt;去北京&lt;/router-link&gt;
+  &lt;router-link :to=&quot;{name:&#39;bj&#39;}&quot;&gt;去北京&lt;/router-link&gt;
+</code></pre><h5 id="路由带值-在create-获取路由中的值"><a href="#路由带值-在create-获取路由中的值" class="headerlink" title="路由带值:在create(){ 获取路由中的值 }"></a>路由带值:在create(){ 获取路由中的值 }</h5><ul>
+<li>查询字符串<ul>
+<li>1:去哪里 <code>&lt;router-link :to=&quot;{name:&#39;detail&#39;,query:{id:1}  } &quot;&gt;xxx&lt;/router-link&gt;</code></li>
+<li>2:导航(查询字符串path不用改) <code>{ name:&#39;detail&#39; , path:&#39;/detail&#39;,组件}</code></li>
+<li>3:去了干嘛,获取路由参数(要注意是query还是params和对应id名)<ul>
+<li><code>this.$route.query.id</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>path方式<ul>
+<li>1:去哪里 <code>&lt;router-link :to=&quot;{name:&#39;detail&#39;,params:{name:1}  } &quot;&gt;xxx&lt;/router-link&gt;</code></li>
+<li>2:导航(path方式需要在路由规则上加上/:xxx) </li>
+<li><code>{ name:&#39;detail&#39; , path:&#39;/detail/:name&#39;,组件}</code>可以在后面加多个值<code>{ name:&#39;detail&#39; , path:&#39;/detail/:name/:id/:pass&#39;,组件}</code></li>
+<li>3:去了干嘛,获取路由参数(要注意是query还是params和对应name名)<ul>
+<li><code>this.$route.params.name</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="路由跳转"><a href="#路由跳转" class="headerlink" title="路由跳转"></a>路由跳转</h5><pre><code>this.$router.go(1) 根据浏览器记录 前进1 后退-1
+
+this.$router.push(/home)直接跳转到某个页面显示
+</code></pre><h5 id="命名试图"><a href="#命名试图" class="headerlink" title="命名试图"></a>命名试图</h5><p>在一个页面有多个router-view时,</p>
+<pre><code>&lt;router-view name=&quot;a&quot;&gt;&lt;/router-view&gt;
+&lt;router-view name=&quot;b&quot;&gt;&lt;/router-view&gt;
+</code></pre><p>在路由匹配中</p>
+<pre><code>var Foo = { template: &#39;&lt;div&gt;foo&lt;/div&gt;&#39; }
+var Bar = { template: &#39;&lt;div&gt;bar&lt;/div&gt;&#39; }
+var routes = [
+        {
+            path:&quot;/one&quot;,
+            name:&quot;one&quot;,
+            components:{
+                a:Foo,
+                b:Bar
+            }
+        },
+    ]
+</code></pre><h5 id="重定向和404"><a href="#重定向和404" class="headerlink" title="重定向和404"></a>重定向和404</h5><ul>
+<li>进入后，默认就是/</li>
+<li>重定向 <code>{ path:&#39;/&#39; ,redirect:&#39;/home&#39;  }</code></li>
+<li>重定向 <code>{ path:&#39;/&#39; ,redirect:{name:&#39;home&#39;}  }</code></li>
+<li>404 : 在路由规则的最后的一个规则<ul>
+<li>写一个很强大的匹配</li>
+<li>`{ path:’*’ , component:notFoundVue}</li>
+</ul>
+</li>
+</ul>
+<h4 id="6-执行子组件事件"><a href="#6-执行子组件事件" class="headerlink" title="6.执行子组件事件"></a>6.执行子组件事件</h4><p>在父组件</p>
+<pre><code>&lt;child ref=&quot;childRef&quot;&gt;&lt;/child&gt;
+this.$ref.childRef.childEvent();
+</code></pre><p>在子组件</p>
+<pre><code>methods: {
+    childEvent(){
+        // xxxx
+    }
+
+}
+</code></pre><h4 id="使用富文本"><a href="#使用富文本" class="headerlink" title="使用富文本"></a>使用富文本</h4><pre><code>npm install @tinymce/tinymce-vue -S
+</code></pre><pre><code>npm install tinymce -S 
+</code></pre><p>tinymce提供了很多的语言包，这里我们下载<a href="https://www.tiny.cloud/get-tiny/language-packages/" target="_blank" rel="noopener">中文语言包</a></p>
+<p>1、在<code>public</code>目录下新建<code>tinymce</code>，将上面下载的语言包解压到该目录<br>2、在<code>node_modules</code>里面找到<code>tinymce</code>,将<code>skins</code>目录复制到<code>public/tinymce</code>里面</p>
+<p>最终形成以下目录形式：<br><img src="https://img2018.cnblogs.com/blog/1249006/201904/1249006-20190415142353815-177141399.jpg" alt="img"></p>
+<p>编写 tinymce-editor.vue 组件</p>
+<pre><code class="javascript">&lt;template&gt;
+  &lt;div class=&quot;tinymce-editor&quot;&gt;
+    &lt;editor v-model=&quot;myValue&quot;
+      :init=&quot;init&quot;
+      :disabled=&quot;disabled&quot;
+      @onClick=&quot;onClick&quot;&gt;
+    &lt;/editor&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+&lt;script&gt;
+import tinymce from &#39;tinymce/tinymce&#39;
+import Editor from &#39;@tinymce/tinymce-vue&#39;
+import &#39;tinymce/themes/silver&#39;
+// 编辑器插件plugins
+// 更多插件参考：https://www.tiny.cloud/docs/plugins/
+import &#39;tinymce/plugins/image&#39;// 插入上传图片插件
+import &#39;tinymce/plugins/media&#39;// 插入视频插件
+import &#39;tinymce/plugins/table&#39;// 插入表格插件
+import &#39;tinymce/plugins/lists&#39;// 列表插件
+import &#39;tinymce/plugins/wordcount&#39;// 字数统计插件
+export default {
+  components: {
+    Editor
+  },
+  props: {
+    value: {
+      type: String,
+      default: &#39;&#39;
+    },
+    disabled: {
+      type: Boolean,
+      default: false
+    },
+    plugins: {
+      type: [String, Array],
+      default: &#39;lists image media table wordcount&#39;
+    },
+    toolbar: {
+      type: [String, Array],
+      default: &#39;undo redo |  formatselect | bold italic forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | lists image media table | removeformat&#39;
+    }
+  },
+  data () {
+    return {
+      init: {
+        language_url: &#39;/tinymce/langs/zh_CN.js&#39;,
+        language: &#39;zh_CN&#39;,
+        skin_url: &#39;/tinymce/skins/ui/oxide&#39;,
+        // skin_url: &#39;/tinymce/skins/ui/oxide-dark&#39;,//暗色系
+        height: 300,
+        plugins: this.plugins,
+        toolbar: this.toolbar,
+        branding: false,
+        menubar: false,
+        // 此处为图片上传处理函数，这个直接用了base64的图片形式上传图片，
+        // 如需ajax上传可参考https://www.tiny.cloud/docs/configure/file-image-upload/#images_upload_handler
+        images_upload_handler: (blobInfo, success, failure) =&gt; {
+          const img = &#39;data:image/jpeg;base64,&#39; + blobInfo.base64()
+          success(img)
+        }
+      },
+      myValue: this.value
+    }
+  },
+  mounted () {
+    tinymce.init({})
+  },
+  methods: {
+    // 添加相关的事件，可用的事件参照文档=&gt; https://github.com/tinymce/tinymce-vue =&gt; All available events
+    // 需要什么事件可以自己增加
+    onClick (e) {
+      this.$emit(&#39;onClick&#39;, e, tinymce)
+    },
+    // 可以添加一些自己的自定义事件，如清空内容
+    clear () {
+      this.myValue = &#39;&#39;
+    }
+  },
+  watch: {
+    value (newValue) {
+      this.myValue = newValue
+    },
+    myValue (newValue) {
+      this.$emit(&#39;input&#39;, newValue)
+    }
+  }
+}
+
+&lt;/script&gt;
+</code></pre>
+<p>使用</p>
+<pre><code>import TinymceEditor from &#39;@/components/tinymce&#39;
+
+components: {
+
+ TinymceEditor
+
+  },
+
+&lt;TinymceEditor v-model=&quot;msg&quot;&gt;&lt;/TinymceEditor&gt;
+</code></pre><h4 id="使用element-ui"><a href="#使用element-ui" class="headerlink" title="使用element-ui"></a>使用element-ui</h4><pre><code>1. 安装 loader 模块：
+    cnpm install style-loader -D
+    cnpm install css-loader -D
+    cnpm install file-loader -D
+2. 安装 Element-UI 模块
+   cnpm install element-ui --save 
+
+3. 修改 webpack.base.conf.js 的配置，位置：如下图：
+     {
+        test: /\\\\\\\\.css$/,
+        loader: &quot;style!css&quot;
+    },
+    {
+        test: /\\\\\\\\.(eot|woff|woff2|ttf)([\\\\\\\\?]?.*)$/,
+        loader: &quot;file&quot;
+    } 
+  4.打开项目：src/main.js,添加下面三条
+   import ElementUI from &#39;element-ui&#39;
+   import &#39;element-ui/lib/theme-chalk/index.css&#39;
+   Vue.use(ElementUI)
+</code></pre><p>在使用上传文件时,在钩子函数需要传另外的参数</p>
+<pre><code>:on-success=&quot;(response, file, fileList)=&gt;uploadSuccessPic(response, file, fileList,index,index2)&quot;
+
+on-remove=&quot;(file, fileList)=&gt;removePic(file, fileList,index,index2)&quot;
+</code></pre><h4 id="使用axios"><a href="#使用axios" class="headerlink" title="使用axios"></a>使用axios</h4><pre><code class="html"> npm install axios --save-dev
+</code></pre>
+<pre><code class="html">import axios from &#39;axios&#39;
+</code></pre>
+<pre><code class="html">Vue.prototype.$http=axios
+</code></pre>
+<p>在组件中使用:</p>
+<pre><code>
+methods: {
+      get(){
+        this.$http({
+          method:&#39;get&#39;,
+          url:&#39;/url&#39;,
+          data:{}
+        }).then(function(res){
+          console.log(res)
+        }).catch(function(err){
+          console.log(err)
+        })
+
+        this.$http.get(&#39;/url&#39;).then(function(res){
+          console.log(res)
+        }).catch(function(err){
+          console.log(err)
+        })
+      }     
+}
+</code></pre><h4 id="Vue2-0做的项目在IE下面打开一片空白解决办法"><a href="#Vue2-0做的项目在IE下面打开一片空白解决办法" class="headerlink" title="Vue2.0做的项目在IE下面打开一片空白解决办法"></a>Vue2.0做的项目在IE下面打开一片空白解决办法</h4><p><a href="https://blog.csdn.net/lyn1772671980/article/details/80690490" target="_blank" rel="noopener">https://blog.csdn.net/lyn1772671980/article/details/80690490</a></p>
+<h4 id="VUE有默认边距"><a href="#VUE有默认边距" class="headerlink" title="VUE有默认边距"></a>VUE有默认边距</h4><pre><code>*{
+    padding: 0;
+    margin: 0;
+  }
+</code></pre><h4 id="函数calc-用于计算长度"><a href="#函数calc-用于计算长度" class="headerlink" title="函数calc() ,用于计算长度"></a>函数calc() ,用于计算长度</h4><pre><code>height:calc(100vh - 100px);
+</code></pre><h4 id="监听器"><a href="#监听器" class="headerlink" title="监听器"></a>监听器</h4><pre><code> watch: {
+    // 如果 `question` 发生改变，这个函数就会运行
+    question: function (newQuestion, oldQuestion) {
+      this.answer = &#39;Waiting for you to stop typing...&#39;
+      this.debouncedGetAnswer()
+    }
+  },
+</code></pre><h4 id="修改VUE的公共样式"><a href="#修改VUE的公共样式" class="headerlink" title="修改VUE的公共样式"></a>修改VUE的公共样式</h4><pre><code class="css">body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, form, fieldset, legend, input, button, textarea, p, th, td {
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+}
+
+img {
+  border: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-size: 14px;
+}
+
+input, button, textarea, select, optgroup, option {
+  font-family: inherit;
+  font-size: inherit;
+  font-style: inherit;
+  font-weight: inherit;
+}
+
+input, button, textarea, select {
+  *font-size: 100%;
+}
+
+ol, ul {
+  list-style: none;
+}
+
+:link, :visited {
+  text-decoration: none;
+}
+
+.clearfix:after {
+  content: &quot;.&quot;;
+  display: block;
+  height: 0;
+  clear: both;
+  visibility: hidden;
+}
+
+.clearfix {
+  zoom: 1;
+}
+</code></pre>
+<h4 id="快速实现块级元素上下居中"><a href="#快速实现块级元素上下居中" class="headerlink" title="快速实现块级元素上下居中"></a>快速实现块级元素上下居中</h4><pre><code class="css">top: 50%;
+left: 50%;
+position:absolute;
+transform: translate(-50%, -50%);
+</code></pre>
+<h4 id="动态为对象的属性赋值"><a href="#动态为对象的属性赋值" class="headerlink" title="动态为对象的属性赋值"></a>动态为对象的属性赋值</h4><pre><code class="javascript">var s={
+name:&quot;张三&quot;
+}
+s.age=18
+var p=&#39;sex&#39;
+s[p]=&#39;男&#39;
+最后s变为:
+s{
+name :&quot;张三&quot;,
+age :18,
+sex :&quot;男&quot;
+}
+</code></pre>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</p>
+<h4 id="双向绑定的坑"><a href="#双向绑定的坑" class="headerlink" title="双向绑定的坑"></a>双向绑定的坑</h4><p>Vue 不能检测到对象属性的添加或删除。由于 Vue 会在初始化实例时对属性执行 getter/setter 转化过程，所以属性必须在 data 对象上存在才能让 Vue 转换它，这样才能让它是响应的。为对象在后面添加的属性不是响应的</p>
+<h4 id="超出省略号"><a href="#超出省略号" class="headerlink" title="超出省略号"></a>超出省略号</h4><p>单行</p>
+<pre><code>overflow: hidden;
+text-overflow:ellipsis;
+white-space: nowrap;
+</code></pre><p>多行</p>
+<pre><code>display: -webkit-box;
+-webkit-box-orient: vertical;
+-webkit-line-clamp: 3;
+overflow: hidden;
+</code></pre></div><div class="post-copyright"><blockquote><p>原文作者: mjy</p><p>原文链接: <a href="http://blog.moujiangyong.com/2018/07/12/VUE/">http://blog.moujiangyong.com/2018/07/12/VUE/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2018/07/12/SpringMVC/" class="pre">springboot-Controller的全局控制</a><a href="/2018/07/12/java8集合流式编程/" class="next">java8集合流式编程</a></div><div id="comments"></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-创建项目"><span class="toc-text">1.创建项目:</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-组件引用"><span class="toc-text">2.组件引用</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-全局组件的使用"><span class="toc-text">3.全局组件的使用</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-组件传值"><span class="toc-text">4.组件传值</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#父组件向子组件传值"><span class="toc-text">父组件向子组件传值</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#子组件向父组件传值"><span class="toc-text">子组件向父组件传值</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#子组件父组件双向传值"><span class="toc-text">子组件父组件双向传值</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#v-model解释"><span class="toc-text">v-model解释</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-路由"><span class="toc-text">5.路由:</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#路由带值-在create-获取路由中的值"><span class="toc-text">路由带值:在create(){ 获取路由中的值 }</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#路由跳转"><span class="toc-text">路由跳转</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#命名试图"><span class="toc-text">命名试图</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#重定向和404"><span class="toc-text">重定向和404</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6-执行子组件事件"><span class="toc-text">6.执行子组件事件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用富文本"><span class="toc-text">使用富文本</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用element-ui"><span class="toc-text">使用element-ui</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用axios"><span class="toc-text">使用axios</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Vue2-0做的项目在IE下面打开一片空白解决办法"><span class="toc-text">Vue2.0做的项目在IE下面打开一片空白解决办法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#VUE有默认边距"><span class="toc-text">VUE有默认边距</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#函数calc-用于计算长度"><span class="toc-text">函数calc() ,用于计算长度</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#监听器"><span class="toc-text">监听器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#修改VUE的公共样式"><span class="toc-text">修改VUE的公共样式</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#快速实现块级元素上下居中"><span class="toc-text">快速实现块级元素上下居中</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#动态为对象的属性赋值"><span class="toc-text">动态为对象的属性赋值</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#双向绑定的坑"><span class="toc-text">双向绑定的坑</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#超出省略号"><span class="toc-text">超出省略号</span></a></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/09/21/JVM 配置常用参数和常用 GC 调优策略(转)/">jvm常用配置(转)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/01/开源项目/">开源项目</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/07/02/Linux安装环境/">Linux安装环境</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/17/String/">String.format()方法的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/30/常用递归的使用/">常用递归的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/23/feign和restTemplate的使用/">okhttp,feign,restTemplate的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/21/Java虚拟机调优/">Java虚拟机调优</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/logback的使用/">springboot-logback的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/21/spring-cloud之权限/">spring-cloud之权限</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/01/spring-cloud之链路追踪/">spring-cloud之链路追踪</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JVM/">JVM</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/http请求/">http请求</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/java8/">java8</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springboot/">springboot</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springcloud/">springcloud</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/前端/">前端</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客/">博客</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/搜索引擎/">搜索引擎</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/笔记/">笔记</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/线程/">线程</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/递归/">递归</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/项目/">项目</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/spring-cloud/" style="font-size: 15px;">spring cloud</a> <a href="/tags/资料/" style="font-size: 15px;">资料</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li></ul></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/baidusitemap.xml">网站地图</a> |  <a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><a href="https://beian.miit.gov.cn " rel="nofollow">蜀ICP备19003737号</a></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>

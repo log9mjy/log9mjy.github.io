@@ -1,0 +1,312 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="jiangyong's blog."><meta name="keywords" content="学习,记录,笔记"><title>spring-cloud之权限 | 听雨时的忧愁</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">spring-cloud之权限</h1><a id="logo" href="/.">听雨时的忧愁</a><p class="description">天下武功,唯快不破</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><div id="search-result"></div></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">spring-cloud之权限</h1><div class="post-meta"><a href="/2019/04/21/spring-cloud之权限/#comments" class="comment-count"></a><p><span class="date">Apr 21, 2019</span><span><a href="/categories/springcloud/" class="category">springcloud</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><h4 id="对外提供的接口的权限-使用oauth2"><a href="#对外提供的接口的权限-使用oauth2" class="headerlink" title="对外提供的接口的权限:使用oauth2"></a>对外提供的接口的权限:使用oauth2</h4><p>oauth2除了验证token,还验证客户端的合法性 . access_token是为了调用接口需要的验证,而client_id和client_secret是验证颁发token的客户端.在每个资源服务器都会配client_id和client_secret,相当于不是每一个资源服务器都可以来我这里认证,必须要我认证的才可以 .不要误解为颁发给这个客户端的token,只能调用这个客户端相同的资源服务器接口.而是只要这个client_id和client_secret认证正确都可以调用,起到权限的作用还是token.使用</p>
+<pre><code class="java">  @RequestMapping(value = &quot;/list&quot;, method = RequestMethod.GET)
+    @PreAuthorize(&quot;hasRole(&#39;ADMIN&#39;)&quot;)
+    public R list() {
+        List&lt;User&gt; list = userService.list();
+        return R.ok(list);
+    }
+</code></pre>
+<p>授权服务器</p>
+<pre><code class="java">package com.mjy.auth.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+@Configuration
+public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.csrf().disable()
+                .authorizeRequests()
+                .antMatchers(&quot;/actuator/**&quot;).permitAll()
+                .anyRequest().authenticated();
+    }
+
+    @Override
+    @Bean
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}
+</code></pre>
+<pre><code class="java">package com.mjy.auth.config;
+
+import com.mjy.common.core.constants.SecurityConstants;
+import com.mjy.common.security.entity.UserDetails;
+import com.mjy.common.security.service.ClientDetailsService;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
+import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
+import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
+import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
+import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
+import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.error.WebResponseExceptionTranslator;
+import org.springframework.security.oauth2.provider.token.TokenEnhancer;
+import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
+
+import javax.sql.DataSource;
+import java.util.HashMap;
+import java.util.Map;
+
+@EnableAuthorizationServer
+@Configuration
+public class AuthorizationServerConfiguration extends AuthorizationServerConfigurerAdapter {
+
+    private DataSource dataSource;
+
+    private RedisConnectionFactory redisConnectionFactory;
+
+    private UserDetailsService userDetailsService;
+
+    private AuthenticationManager authenticationManager;
+
+    private WebResponseExceptionTranslator&lt;OAuth2Exception&gt; exceptionTranslator;
+
+
+    public AuthorizationServerConfiguration(DataSource dataSource,
+                                            RedisConnectionFactory redisConnectionFactory,
+                                            UserDetailsService userDetailsService,
+                                            AuthenticationManager authenticationManager,
+                                            WebResponseExceptionTranslator&lt;OAuth2Exception&gt; exceptionTranslator) {
+        this.dataSource = dataSource;
+        this.redisConnectionFactory = redisConnectionFactory;
+        this.userDetailsService = userDetailsService;
+        this.authenticationManager = authenticationManager;
+        this.exceptionTranslator = exceptionTranslator;
+    }
+
+    @Override
+    public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
+        security.allowFormAuthenticationForClients()//开启过滤器认证客户端信息
+                .checkTokenAccess(&quot;permitAll()&quot;)//开启/oauth/token_key验证端口无权限访问
+                .tokenKeyAccess(&quot;permitAll()&quot;);//开启/oauth/check_token验证端口认证权限访问
+        // .passwordEncoder(new BCryptPasswordEncoder()); //编码
+    }
+
+    @Override
+    public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
+        ClientDetailsService clientDetailsService = new ClientDetailsService(dataSource);
+        clientDetailsService.setSelectClientDetailsSql(SecurityConstants.DEFAULT_SELECT_STATEMENT);
+        clientDetailsService.setFindClientDetailsSql(SecurityConstants.DEFAULT_FIND_STATEMENT);
+        clients.withClientDetails(clientDetailsService);
+    }
+
+    @Override
+    public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
+        endpoints
+                .allowedTokenEndpointRequestMethods(HttpMethod.GET, HttpMethod.POST)
+                .tokenStore(tokenStore())
+                .tokenEnhancer(tokenEnhancer())
+                .userDetailsService(userDetailsService)
+                .authenticationManager(authenticationManager)
+                .exceptionTranslator(exceptionTranslator)
+                .reuseRefreshTokens(false);//refresh token不需要需要重新生成；
+    }
+
+    @Bean
+    public TokenStore tokenStore() {
+        RedisTokenStore tokenStore = new RedisTokenStore(redisConnectionFactory);
+        tokenStore.setPrefix(SecurityConstants.PROJECT_PREFIX + SecurityConstants.OAUTH_PREFIX);
+        return tokenStore;
+    }
+
+    @Bean
+    public TokenEnhancer tokenEnhancer() {
+        return (accessToken, authentication) -&gt; {
+            final Map&lt;String, Object&gt; additionalInfo = new HashMap&lt;&gt;(1);
+            UserDetails userDetails = (UserDetails) authentication.getUserAuthentication().getPrincipal();
+            additionalInfo.put(SecurityConstants.DETAILS_USER_ID, userDetails.getId());
+            ((DefaultOAuth2AccessToken) accessToken).setAdditionalInformation(additionalInfo);
+            return accessToken;
+        };
+    }
+}
+</code></pre>
+<p>资源服务器</p>
+<p>RemoteTokenServices,将headers中的</p>
+<p>Authorization—–Bearer 40f94906-72b4-4e37-8ac4-1c322e00f5e1,调用loadAuthentication()封装token参数,并且将client_id,client_secret</p>
+<pre><code class="java">String creds = String.format(&quot;%s:%s&quot;, clientId, clientSecret);
+
+try {
+    return &quot;Basic &quot; + new String(Base64.encode(creds.getBytes(&quot;UTF-8&quot;)));
+} catch (UnsupportedEncodingException var5) {
+    throw new IllegalStateException(&quot;Could not convert String&quot;);
+}
+</code></pre>
+<p>远程调用授权服务器验证token以及客户端的合法性</p>
+<pre><code class="java">package com.mjy.common.security.config;
+
+import com.mjy.common.security.component.IgnorePropertiesConfig;
+import com.mjy.common.security.handler.AccessDeniedHandler;
+import com.mjy.common.security.handler.EntryPointHandle;
+import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.ResourceServerProperties;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
+import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
+import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.token.RemoteTokenServices;
+import org.springframework.web.client.DefaultResponseErrorHandler;
+import org.springframework.web.client.RestTemplate;
+
+
+@EnableResourceServer
+@Configuration
+@ConditionalOnProperty(&quot;security.oauth2.client.client-id&quot;)
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter {
+
+
+    private IgnorePropertiesConfig propertiesConfig;
+
+    private AccessDeniedHandler accessDeniedHandler;
+
+    private EntryPointHandle entryPointHandle;
+
+    private ResourceServerProperties resource;
+
+
+    public ResourceServerConfiguration(IgnorePropertiesConfig propertiesConfig,
+                                       AccessDeniedHandler accessDeniedHandler,
+                                       EntryPointHandle entryPointHandle,
+                                       ResourceServerProperties resource) {
+        this.propertiesConfig = propertiesConfig;
+        this.accessDeniedHandler = accessDeniedHandler;
+        this.entryPointHandle = entryPointHandle;
+        this.resource = resource;
+    }
+
+
+    @Bean
+    @Primary
+    @LoadBalanced// 开启负载均衡,使用服务名(mjy-auth)
+    public RestTemplate lbRestTemplate() {
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
+            @Override
+            @SneakyThrows
+            public void handleError(ClientHttpResponse response) {
+                if (response.getRawStatusCode() != HttpStatus.BAD_REQUEST.value()) {
+                    super.handleError(response);
+                }
+            }
+        });
+        return restTemplate;
+    }
+
+    @Bean
+    public RemoteTokenServices remoteTokenServices() {
+        RemoteTokenServices services = new RemoteTokenServices();
+        services.setCheckTokenEndpointUrl(resource.getTokenInfoUri());
+        services.setClientId(resource.getClientId());
+        services.setClientSecret(resource.getClientSecret());
+        services.setRestTemplate(lbRestTemplate());
+        return services;
+    }
+
+    @Override
+    public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
+        resources.accessDeniedHandler(accessDeniedHandler)
+                .authenticationEntryPoint(entryPointHandle)
+                .tokenServices(remoteTokenServices());
+    }
+
+    @Override
+    public void configure(HttpSecurity http) throws Exception {
+        ExpressionUrlAuthorizationConfigurer&lt;HttpSecurity&gt;
+                .ExpressionInterceptUrlRegistry registry = http.csrf()
+                .disable()
+                .authorizeRequests();
+        propertiesConfig.getUrls().forEach(s -&gt; registry.antMatchers(s).permitAll());
+        registry.anyRequest().authenticated();
+    }
+}
+</code></pre>
+<h4 id="服务之间的调用的权限"><a href="#服务之间的调用的权限" class="headerlink" title="服务之间的调用的权限"></a>服务之间的调用的权限</h4><p>所有调用接口都由网关转发,所以在部署时,只需要暴露网关的IP和端口,其他服务所有服务器可以使用内部局域网,这样外部网络无法直接访问这些服务的接口,只能通过网关.在服务间调用,我们可以给服务调用添加一个内部服务调用的header,这些提供服务的接口不需要oauth2的权限,直接放开.并且在网关是指拦截器,将我们设置特殊的header中的值清空,这样就不会服务调用服务的时候带上特殊的header,那些内部调用的接口就不会让调用.这一公共我们可以使用注解,加上aop可以统一处理.</p>
+<pre><code class="java">@Slf4j
+@Aspect
+@Component
+@AllArgsConstructor
+public class SecurityInnerAspect implements Ordered {
+   private final HttpServletRequest request;
+
+   @SneakyThrows
+   @Around(&quot;@annotation(inner)&quot;)
+   public Object around(ProceedingJoinPoint point, Inner inner) {
+      String header = request.getHeader(SecurityConstants.FROM);
+      if (inner.value() &amp;&amp; !StrUtil.equals(SecurityConstants.FROM_IN, header)) {
+         log.warn(&quot;访问接口 {} 没有权限&quot;, point.getSignature().getName());
+         throw new AccessDeniedException(&quot;Access is denied&quot;);
+      }
+      return point.proceed();
+   }
+
+   @Override
+   public int getOrder() {
+      return Ordered.HIGHEST_PRECEDENCE + 1;
+   }
+}
+</code></pre>
+<pre><code class="java">@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface Inner {
+
+   /**
+    * 是否AOP统一处理
+    *
+    * @return false, true
+    */
+   boolean value() default true;
+
+   /**
+    * 需要特殊判空的字段(预留)
+    *
+    * @return {}
+    */
+   String[] field() default {};
+}
+</code></pre>
+<pre><code class="java">@Inner
+@GetMapping(&quot;/info/{username}&quot;)
+public R info(@PathVariable String username) {
+   SysUser user = userService.getOne(Wrappers.&lt;SysUser&gt;query()
+      .lambda().eq(SysUser::getUsername, username));
+   if (user == null) {
+      return R.failed(String.format(&quot;用户信息为空 %s&quot;, username));
+   }
+   return R.ok(userService.getUserInfo(user));
+}
+</code></pre>
+</div><div class="post-copyright"><blockquote><p>原文作者: mjy</p><p>原文链接: <a href="http://blog.moujiangyong.com/2019/04/21/spring-cloud之权限/">http://blog.moujiangyong.com/2019/04/21/spring-cloud之权限/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2019/05/18/logback的使用/" class="pre">springboot-logback的使用</a><a href="/2019/04/01/spring-cloud之链路追踪/" class="next">spring-cloud之链路追踪</a></div><div id="comments"></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#对外提供的接口的权限-使用oauth2"><span class="toc-text">对外提供的接口的权限:使用oauth2</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#服务之间的调用的权限"><span class="toc-text">服务之间的调用的权限</span></a></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/09/21/JVM 配置常用参数和常用 GC 调优策略(转)/">jvm常用配置(转)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/01/开源项目/">开源项目</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/07/02/Linux安装环境/">Linux安装环境</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/17/String/">String.format()方法的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/30/常用递归的使用/">常用递归的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/23/feign和restTemplate的使用/">okhttp,feign,restTemplate的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/21/Java虚拟机调优/">Java虚拟机调优</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/logback的使用/">springboot-logback的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/21/spring-cloud之权限/">spring-cloud之权限</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/01/spring-cloud之链路追踪/">spring-cloud之链路追踪</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JVM/">JVM</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/http请求/">http请求</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/java8/">java8</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springboot/">springboot</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springcloud/">springcloud</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/前端/">前端</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客/">博客</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/搜索引擎/">搜索引擎</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/笔记/">笔记</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/线程/">线程</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/递归/">递归</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/项目/">项目</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/spring-cloud/" style="font-size: 15px;">spring cloud</a> <a href="/tags/资料/" style="font-size: 15px;">资料</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li></ul></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/baidusitemap.xml">网站地图</a> |  <a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><a href="https://beian.miit.gov.cn " rel="nofollow">蜀ICP备19003737号</a></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>

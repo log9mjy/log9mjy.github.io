@@ -1,0 +1,340 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="jiangyong's blog."><meta name="keywords" content="学习,记录,笔记"><title>Linux安装环境 | 听雨时的忧愁</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">Linux安装环境</h1><a id="logo" href="/.">听雨时的忧愁</a><p class="description">天下武功,唯快不破</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><div id="search-result"></div></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">Linux安装环境</h1><div class="post-meta"><a href="/2019/07/02/Linux安装环境/#comments" class="comment-count"></a><p><span class="date">Jul 02, 2019</span><span><a href="/categories/Linux/" class="category">Linux</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><h2 id="安装JDK"><a href="#安装JDK" class="headerlink" title="安装JDK"></a>安装JDK</h2><p>1.将jdk-8u11-linux-x64.tar上传到Linux中,并且解压</p>
+<p>2.配置环境变量</p>
+<pre><code>vim /etc/profile
+</code></pre><p>最后写入</p>
+<pre><code>export JAVA_HOME=/usr/local/java/jdk1.8.0_11
+export CLASSPATH=$JAVA_HOME/lib/
+export PATH=$PATH:$JAVA_HOME/bin
+export PATH JAVA_HOME CLASSPATH
+</code></pre><p>3.生效环境变量</p>
+<pre><code>source /etc/profile
+</code></pre><h2 id="安装数据库"><a href="#安装数据库" class="headerlink" title="安装数据库"></a>安装数据库</h2><pre><code>版本:mysql-5.6.42-linux-glibc2.12-x86_64.tar.gz
+</code></pre><pre><code>解压
+tar zxvf mysql-5.6.33-linux-glibc2.5-x86_64.tar.gz
+
+复制解压后的mysql目录到系统的本地软件目录
+cp mysql-5.6.33-linux-glibc2.5-x86_64 /usr/local/mysql -r
+
+添加系统mysql组和mysql用户
+groupadd mysql
+useradd -r -g mysql -s /bin/false mysql
+
+进入安装mysql软件目录，修改目录拥有者为mysql用户
+cd mysql/
+chown -R mysql:mysql ./
+
+安装数据库，此处可能出现错误。
+
+./scripts/mysql_install_db --user=mysql
+
+如果出现错误
+    FATAL ERROR: please install the following Perl modules before executing scripts/mysql_install_db:
+    Data::Dumper
+
+yum install -y perl-Data-Dumper
+
+如果出现错误
+     Installing MySQL system tables..../bin/mysqld: error while loading shared libraries: libaio.so.1: cannot open shared object file: No such file or directory
+#解决方法：     
+yum install libaio* -y
+修改当前目录拥有者为root用户
+chown -R root:root ./
+
+修改当前data目录拥有者为mysql用户
+chown -R mysql:mysql data
+
+============== 到此数据库安装完毕 =============
+
+添加mysql服务开机自启动
+
+添加开机启动，把启动脚本放到开机初始化目录。
+cp support-files/mysql.server /etc/init.d/mysql
+# 赋予可执行权限
+chmod +x /etc/init.d/mysql
+# 添加服务
+chkconfig --add mysql 
+# 显示服务列表
+chkconfig --list 
+如果看到mysql的服务，并且3,4,5都是on的话则成功，如果是off，则执行
+chkconfig --level 345 mysql on
+
+启动mysql服务
+#创建缺少的文件夹
+mkdir /var/log/mariadb
+service mysql start
+正常提示信息：Starting MySQL. SUCCESS!
+
+把mysql客户端放到默认路径
+ln -s /usr/local/mysql/bin/mysql /usr/local/bin/mysql
+注意：建议使用软链过去，不要直接包文件复制，便于系统安装多个版本的mysql
+
+=================== 这是分割线 ==================
+
+通过使用 mysql -uroot -p 连接数据库（默认数据库的root用户没有密码，这个需要设置一个密码）。
+mysql安装目录support_file下的my-default文件 在里面找到 [mysqld] 这一项，然后在该配置项下添加 skip-grant-tables
+#重启 
+service mysql restart
+免密登录MySQL
+敲入 mysql -u root -p 命令然后回车，当需要输入密码时，直接按enter键，便可以不用密码登录到数据库当中
+使用 set password for &#39;root&#39;@&#39;localhost&#39; = password(&#39;密码&#39;) 命令修改新的密码。
+--------------------- 
+错误信息：ERROR 2002 (HY000): Can&#39;t connect to local MySQL server through socket &#39;/tmp/mysql.sock&#39; (2)
+
+解决方法：打开/etc/my.cnf,看看里面配置的socket位置是什么目录。“socket=/var/lib/mysql/mysql.sock”
+
+路径和“/tmp/mysql.sock”不一致。建立一个软连接：ln -s /var/lib/mysql/mysql.sock /tmp/mysql.sock
+
+ 到这里任务算是完成了。之后就可以创建数据库用户，然后使用数据库了。
+
+###################### 分割线 ######################
+
+权限控制
+
+1、去除匿名用户
+
+# 测试匿名用户登录
+mysql -ux3
+
+可以看到匿名用户可以登录，具有information_schema和test库的相关权限。
+
+# 删除匿名用户，使用root用户登录数据库
+delete from mysql.user where User=&#39;&#39;;
+flush privileges;
+
+再次测试匿名用户登录
+
+
+</code></pre><h2 id="Linux安装Redis"><a href="#Linux安装Redis" class="headerlink" title="Linux安装Redis"></a>Linux安装Redis</h2><p><a href="https://www.cnblogs.com/wangchunniu1314/p/6339416.html" target="_blank" rel="noopener">https://www.cnblogs.com/wangchunniu1314/p/6339416.html</a></p>
+<h2 id="安装elasticsearch"><a href="#安装elasticsearch" class="headerlink" title="安装elasticsearch"></a>安装elasticsearch</h2><ol>
+<li>去官网下载ES（下载地址：&lt;<a href="https://www.elastic.co/cn/downloads/elasticsearch）" target="_blank" rel="noopener">https://www.elastic.co/cn/downloads/elasticsearch）</a></li>
+<li><p>上传并且解压</p>
+</li>
+<li><p>vim config/elasticsearch.yml</p>
+</li>
+</ol>
+<pre><code># 节点名称
+cluster.name: elasticsearch
+
+# 数据存储位置
+path.data: /usr/local/elasticserch-6.3.0/data
+
+# 日志文件的路径
+path.logs: /usr/local/elasticserch-6.3.0/logs
+
+#绑定监听IP
+ network.host: 192.168.192.128(阿里云私有IP非公网IP)    
+
+# 设置节点间交互的tcp端口,默认是9300
+ transport.tcp.port: 9300  
+
+# 设置对外服务的http端口,默认为9200
+ http.port: 9200 
+</code></pre><ol start="4">
+<li>修改(不修改会报错)</li>
+</ol>
+<pre><code>[1]: max file descriptors [4096] for elasticsearch process is too low, increase to at least [65536]
+ 切换到root用户，编辑limits.conf添加如下内容
+ `vi /etc/security/limits.conf`
+ `* soft nofile 65536`
+ `* hard nofile 65536
+</code></pre><pre><code>[3]: max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
+ 修改/etc/sysctl.conf文件，增加配置vm.max_map_count=262144
+ `vi /etc/sysctl.conf`
+ vm.max_map_count=262144
+ `sysctl -p`
+ 执行命令sysctl -p生效
+</code></pre><p>5.启动</p>
+<pre><code>ES不能用root用户启动，否则会启动报错
+
+①添加es用户   
+
+adduser es
+
+②给es用户赋予操作文件夹的权限
+
+chown -R es:es /usr/local/elasticserch-6.3.0
+
+③切换到es用户，启动es
+
+su es
+
+./elasticsearch
+
+后台启动 ./elasticsearch -d
+</code></pre><p>6.测试</p>
+<p>访问:<a href="http://39.106.156.244:9200/" target="_blank" rel="noopener">http://39.106.156.244:9200/</a></p>
+<p>7.安装kibana</p>
+<pre><code>在es官网下载
+
+vim config/kibana.yml
+
+server.port: 5601
+
+server.host: &quot;192.168.192.128&quot;
+
+elasticsearch.url: &quot;http://192.168.192.128:9200&quot;
+
+启动
+
+./kibana
+</code></pre><h2 id="安装fastDFS"><a href="#安装fastDFS" class="headerlink" title="安装fastDFS"></a>安装fastDFS</h2><pre><code>1.下载安装libfastcommon
+git clone https://github.com/happyfish100/libfastcommon.git
+cd libfastcommon/
+./make.sh
+./make.sh install
+2.下载安装fastdfs
+wget https://github.com/happyfish100/fastdfs/archive/V5.05.tar.gz
+tar -zxvf V5.05.tar.gz
+cd V5.05
+./make.sh
+./make.sh install
+执行安装后，默认会安装到/usr/bin中，并在/etc/fdfs中添加三个配置文件。
+3.修改配置文件
+将/etc/fdfs中三个文件的名字去掉sample.
+tracker.conf 中修改：
+base_path=/usr/lgip_fastdfs/fastdfs-tracker-log   #用于存放日志
+storage.conf 中修改：
+base_path=/usr/lgip_fastdfs/fastdfs-storage-log   #用于存放日志
+store_path0=/usr/lgip_fastdfs/fastdfs-file-save   #存放数据
+tracker_server=192.168.20.35:22122                #指定tracker服务器地址
+client.conf 中同样要修改：
+base_path=/usr/lgip_fastdfs/fastdfs-client-log    #用于存放日志。
+tracker_server=192.168.20.35:22122                #指定tracker服务器地址
+注：以上的base_path、store_path0的路径均需要进行手动创建。
+4.启动tracker和storage
+/usr/bin/fdfs_trackerd /etc/fdfs/tracker.conf  
+/usr/bin/fdfs_storaged /etc/fdfs/storage.conf 
+5.重启tracker和storage
+/usr/bin/fdfs_trackerd /etc/fdfs/tracker.conf  restart
+/usr/bin/fdfs_storaged /etc/fdfs/storage.conf  restart
+6.停止tracker和storage
+/usr/bin/fdfs_trackerd /etc/fdfs/tracker.conf  stop
+/usr/bin/fdfs_storaged /etc/fdfs/storage.conf  stop
+7.启动成功，测试服务是否正常运行：
+上传：/usr/bin/fdfs_upload_file /etc/fdfs/client.conf /usr/01.jpg
+下载：/usr/bin/fdfs_download_file /etc/fdfs/client.conf group1/M00/00/00/eSosZVfrMy2ADEcxAADS9IecoKQ527.jpg /usr/02.jpg
+删除：/usr/bin/fdfs_delete_file /etc/fdfs/client.conf group1/M00/00/00/eSosZVfrLr6AfbmDAADS9IecoKQ093.jpg
+8.在所有storage节点安装fastdfs-nginx-module
+tar -xzvf fastdfs-nginx-module_v1.16.tar.gz
+修改 fastdfs-nginx-module 的 config 配置文件
+cd fastdfs-nginx-module/src
+ vi config
+将
+CORE_INCS=&quot;$CORE_INCS /usr/local/include/fastdfs /usr/local/include/fastcommon/&quot; 
+修改为:
+CORE_INCS=&quot;$CORE_INCS /usr/include/fastdfs /usr/include/fastcommon/&quot;
+9.安装Nginx
+tar -zxvf nginx-1.10.0.tar.gz
+./configure --add-module=/usr/local/src/fastdfs-nginx-module/src &amp;&amp;make &amp;&amp; make install
+
+该出的add-module为fastdfs-nginx-module路径
+10.复制fastdfs-nginx-module下的mod_fastdfs.conf到/etc/fdfs/
+cp /usr/local/src/fastdfs-nginx-module/src/mod_fastdfs.conf /etc/fdfs/
+修改配置文件
+vi /etc/fdfs/mod_fastdfs.conf
+     connect_timeout=10
+     base_path=/tmp
+     tracker_server=ip01:22122
+     storage_server_port=23000
+     group_name=group1
+     url_have_group_name = true
+     store_path0=/fastdfs/storage     //为上传数据的的路径,storage.conf 中的store_path0的路径
+11.复制 FastDFS 的部分配置文件到/etc/fdfs 目录
+cd /usr/local/src/FastDFS/conf
+cp http.conf mime.types /etc/fdfs/
+12.配置nginx
+user root
+
+worker_processes 1;
+
+events {
+
+    worker_connections 1024;
+
+}
+
+http {
+
+    include mime.types;
+
+    default_type application/octet-stream;
+
+    sendfile on;
+
+    keepalive_timeout 65;
+
+    server {
+
+        listen 8888;
+
+        server_name localhost;
+
+        location ~/group([0-9])/M00 {
+
+            ngx_fastdfs_module;
+
+        }
+
+        error_page 500 502 503 504 /50x.html;
+
+
+
+        location = /50x.html {
+
+            root html;
+
+        }
+
+    }
+
+}
+注意:
+ A、8888 端口值是要与/etc/fdfs/storage.conf 中的 http.server_port=8888 相对应, 因为 http.server_port 默认为 8888,如果想改成 80,则要对应修改过来。
+ B、Storage 对应有多个 group 的情况下,访问路径带 group 名,如/group1/M00/00/00/xxx, 对应的 Nginx 配置为:
+     location ~/group([0-9])/M00 {
+         ngx_fastdfs_module;
+      }
+成功后:http://47.110.73.123:8888/group1/M00/00/00/rBCMX1v09E6AXJorAAB-mPrAqvM742.jpg
+</code></pre><h2 id="安装nginx"><a href="#安装nginx" class="headerlink" title="安装nginx"></a>安装nginx</h2><pre><code>安装依赖
+yum install gcc
+yum install pcre-devel
+yum install zlib zlib-devel
+yum install openssl openssl-devel
+//一键安装上面四个依赖
+yum -y install gcc zlib zlib-devel pcre-devel openssl openssl-devel
+下载nginx的tar包
+复制代码
+//创建一个文件夹
+cd /usr/local
+mkdir nginx
+cd nginx
+//下载tar包
+wget http://nginx.org/download/nginx-1.13.7.tar.gz
+tar -xvf nginx-1.13.7.tar.gz
+复制代码
+安装nginx
+//进入nginx目录
+cd /usr/local/nginx
+//执行命令
+./configure
+//执行make命令
+make
+//执行make install命令
+make install
+Nginx常用命令
+//测试配置文件
+安装路径下的/nginx/sbin/nginx -t
+复制代码
+//启动命令
+安装路径下的/nginx/sbin/nginx
+//停止命令
+安装路径下的/nginx/sbin/nginx -s stop
+或者 : nginx -s quit
+//重启命令
+安装路径下的/nginx/sbin/nginx -s reload
+复制代码
+//查看进程命令
+ps -ef | grep nginx
+//平滑重启
+kill -HUP Nginx主进程号
+</code></pre></div><div class="post-copyright"><blockquote><p>原文作者: mjy</p><p>原文链接: <a href="http://blog.moujiangyong.com/2019/07/02/Linux安装环境/">http://blog.moujiangyong.com/2019/07/02/Linux安装环境/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2019/08/01/开源项目/" class="pre">开源项目</a><a href="/2019/06/17/String/" class="next">String.format()方法的使用</a></div><div id="comments"></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#安装JDK"><span class="toc-text">安装JDK</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装数据库"><span class="toc-text">安装数据库</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Linux安装Redis"><span class="toc-text">Linux安装Redis</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装elasticsearch"><span class="toc-text">安装elasticsearch</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装fastDFS"><span class="toc-text">安装fastDFS</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装nginx"><span class="toc-text">安装nginx</span></a></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/09/21/JVM 配置常用参数和常用 GC 调优策略(转)/">jvm常用配置(转)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/01/开源项目/">开源项目</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/07/02/Linux安装环境/">Linux安装环境</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/17/String/">String.format()方法的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/30/常用递归的使用/">常用递归的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/23/feign和restTemplate的使用/">okhttp,feign,restTemplate的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/21/Java虚拟机调优/">Java虚拟机调优</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/logback的使用/">springboot-logback的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/21/spring-cloud之权限/">spring-cloud之权限</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/01/spring-cloud之链路追踪/">spring-cloud之链路追踪</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JVM/">JVM</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/http请求/">http请求</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/java8/">java8</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springboot/">springboot</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springcloud/">springcloud</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/前端/">前端</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客/">博客</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/搜索引擎/">搜索引擎</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/笔记/">笔记</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/线程/">线程</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/递归/">递归</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/项目/">项目</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/spring-cloud/" style="font-size: 15px;">spring cloud</a> <a href="/tags/资料/" style="font-size: 15px;">资料</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li></ul></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/baidusitemap.xml">网站地图</a> |  <a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><a href="https://beian.miit.gov.cn " rel="nofollow">蜀ICP备19003737号</a></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>

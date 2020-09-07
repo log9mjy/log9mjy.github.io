@@ -1,0 +1,292 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="jiangyong's blog."><meta name="keywords" content="学习,记录,笔记"><title>小小的知识点 | 听雨时的忧愁</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">小小的知识点</h1><a id="logo" href="/.">听雨时的忧愁</a><p class="description">天下武功,唯快不破</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><div id="search-result"></div></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">小小的知识点</h1><div class="post-meta"><a href="/2017/01/12/笔记/#comments" class="comment-count"></a><p><span class="date">Jan 12, 2017</span><span><a href="/categories/笔记/" class="category">笔记</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><h5 id="maven阿里云私服"><a href="#maven阿里云私服" class="headerlink" title="maven阿里云私服"></a>maven阿里云私服</h5><pre><code>&lt;mirror&gt;
+    &lt;id&gt;nexus-aliyun&lt;/id&gt;
+    &lt;mirrorOf&gt;*&lt;/mirrorOf&gt;
+    &lt;name&gt;Nexus aliyun&lt;/name&gt;
+    &lt;url&gt;http://maven.aliyun.com/nexus/content/groups/public&lt;/url&gt;
+&lt;/mirror&gt; 
+</code></pre><h5 id="导jar包到本地仓库"><a href="#导jar包到本地仓库" class="headerlink" title="导jar包到本地仓库"></a>导jar包到本地仓库</h5><pre><code>mvn install:install-file -Dfile=d:/wxpay-sdk-3.0.9.jar -DgroupId=com.wxpay -DartifactId=wxpay-sdk -Dversion=3.0.9 -Dpackaging=jar 
+</code></pre><h5 id="mybatis主键返回"><a href="#mybatis主键返回" class="headerlink" title="mybatis主键返回"></a>mybatis主键返回</h5><pre><code>&lt;insert id=&quot;insert&quot; parameterType=&quot;com.dadao.entity.authority.SysAdmin&quot; useGeneratedKeys=&quot;true&quot; keyProperty=&quot;id&quot;&gt;
+在插入的对象直接getId()
+</code></pre><h5 id="mybatis属性类型-一对多-一对一"><a href="#mybatis属性类型-一对多-一对一" class="headerlink" title="mybatis属性类型,一对多,一对一"></a>mybatis属性类型,一对多,一对一</h5><pre><code>association 用javaType
+collection 用oftype
+</code></pre><h5 id="springboot返回的JSON数据非空处理"><a href="#springboot返回的JSON数据非空处理" class="headerlink" title="springboot返回的JSON数据非空处理"></a>springboot返回的JSON数据非空处理</h5><pre><code>import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+
+/**
+ * @author Han Yahong&lt;hyhvpn@126.com&gt;
+ * @program 51-baojiadan-service
+ * @description 返回json空值去掉null和&quot;&quot;
+ * @create 2018-07-26 11:04
+ */
+@Configuration
+public class JacksonConfig {
+    @Bean
+    @Primary
+    @ConditionalOnMissingBean(ObjectMapper.class)
+    public ObjectMapper jacksonObjectMapper(Jackson2ObjectMapperBuilder builder) {
+        ObjectMapper objectMapper = builder.createXmlMapper(false).build();
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        return objectMapper;
+    }
+}
+</code></pre><table>
+<thead>
+<tr>
+<th><code>Include.Include.ALWAYS</code></th>
+<th>默认</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Include.NON_DEFAULT</code></td>
+<td>属性为默认值不序列化</td>
+</tr>
+<tr>
+<td><code>Include.NON_EMPTY</code></td>
+<td>属性为 空（””） 或者为 NULL 都不序列化</td>
+</tr>
+<tr>
+<td><code>Include.NON_NULL</code></td>
+<td>属性为NULL 不序列化</td>
+</tr>
+</tbody>
+</table>
+<pre><code>//替换为null
+public ObjectMapper jacksonObjectMapper(Jackson2ObjectMapperBuilder builder) {
+        ObjectMapper objectMapper = builder.createXmlMapper(false).build();
+        // 字段保留，将null值转为&quot;&quot;
+        objectMapper.getSerializerProvider().setNullValueSerializer(new JsonSerializer&lt;Object&gt;() {
+            @Override
+            public void serialize(Object o, JsonGenerator jsonGenerator,
+                                  SerializerProvider serializerProvider)
+                    throws IOException, JsonProcessingException {
+                jsonGenerator.writeString(&quot;&quot;);
+            }
+        });
+        return objectMapper;
+    }
+</code></pre><h5 id="springboot返回前端日期处理"><a href="#springboot返回前端日期处理" class="headerlink" title="springboot返回前端日期处理"></a>springboot返回前端日期处理</h5><pre><code>spring.jackson.date-format=yyyy-MM-dd HH:mm:ss
+spring.jackson.time-zone=GMT+8
+</code></pre><h5 id="springboot日期处理"><a href="#springboot日期处理" class="headerlink" title="springboot日期处理"></a>springboot日期处理</h5><pre><code>package com.dadao.util.convert;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.stereotype.Component;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+@Component
+    public class DateConvert implements Converter&lt;String, Date&gt; {
+
+        private static final List&lt;String&gt; formarts = new ArrayList&lt;&gt;(4);
+        static{
+            formarts.add(&quot;yyyy-MM&quot;);
+            formarts.add(&quot;yyyy-MM-dd&quot;);
+            formarts.add(&quot;yyyy-MM-dd hh:mm&quot;);
+            formarts.add(&quot;yyyy-MM-dd hh:mm:ss&quot;);
+        }
+
+        @Override
+        public Date convert(String source) {
+            String value = source.trim();
+            if (&quot;&quot;.equals(value)) {
+                return null;
+            }
+            if(source.matches(&quot;^\\d{4}-\\d{1,2}$&quot;)){
+                return parseDate(source, formarts.get(0));
+            }else if(source.matches(&quot;^\\d{4}-\\d{1,2}-\\d{1,2}$&quot;)){
+                return parseDate(source, formarts.get(1));
+            }else if(source.matches(&quot;^\\d{4}-\\d{1,2}-\\d{1,2} {1}\\d{1,2}:\\d{1,2}$&quot;)){
+                return parseDate(source, formarts.get(2));
+            }else if(source.matches(&quot;^\\d{4}-\\d{1,2}-\\d{1,2} {1}\\d{1,2}:\\d{1,2}:\\d{1,2}$&quot;)){
+                return parseDate(source, formarts.get(3));
+            }else {
+                throw new IllegalArgumentException(&quot;Invalid boolean value &#39;&quot; + source + &quot;&#39;&quot;);
+            }
+        }
+
+        /**
+         * 格式化日期
+         * @param dateStr String 字符型日期
+         * @param format String 格式
+         * @return Date 日期
+         */
+        public  Date parseDate(String dateStr, String format) {
+            Date date=null;
+            try {
+                DateFormat dateFormat = new SimpleDateFormat(format);
+                date = dateFormat.parse(dateStr);
+            } catch (Exception e) {
+
+            }
+            return date;
+        }
+
+    }
+</code></pre><h5 id="springmvc文件下载"><a href="#springmvc文件下载" class="headerlink" title="springmvc文件下载"></a>springmvc文件下载</h5><pre><code>@RequestMapping(&quot;download&quot;)
+public ResponseEntity&lt;byte[]&gt; download( ) throws IOException {
+    File file = new File(&quot;modaihuangdi.mkv&quot;);
+    byte[] body = null;
+    InputStream is = new FileInputStream(file);
+    body = new byte[is.available()];
+    is.read(body);
+    HttpHeaders headers = new HttpHeaders();
+    headers.add(&quot;Content-Disposition&quot;, &quot;attchement;filename=&quot; + file.getName());
+    HttpStatus statusCode = HttpStatus.OK;
+    ResponseEntity&lt;byte[]&gt; entity = new ResponseEntity&lt;byte[]&gt;(body, headers, statusCode);
+    return entity;
+}
+</code></pre><h5 id="response返回JSON数据"><a href="#response返回JSON数据" class="headerlink" title="response返回JSON数据"></a>response返回JSON数据</h5><pre><code>httpServletResponse.setCharacterEncoding(&quot;UTF-8&quot;);
+httpServletResponse.setContentType(&quot;application/json; charset=utf-8&quot;);
+Result result=new Result(&quot;20000&quot;,&quot;shibai&quot;);
+httpServletResponse.getWriter().write(JSON.toJSONString(result));
+</code></pre><h5 id="解决跨域"><a href="#解决跨域" class="headerlink" title="解决跨域"></a>解决跨域</h5><pre><code>@Configuration
+public class MyConfiguration {
+
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurerAdapter() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping(&quot;/**&quot;);
+            }
+        };
+    }
+}
+</code></pre><h5 id="安卓生成证书"><a href="#安卓生成证书" class="headerlink" title="安卓生成证书"></a>安卓生成证书</h5><pre><code>进入JDK的bin目录：
+keytool -genkey -keyalg RSA -validity 20000 -alias wsfz -keystore wsfz.keystore
+-validity 20000
+代表有效期天数
+
+-alias appcan 
+代表证书别名为appcan
+
+-keystore appcan.keystore
+命令完成后，bin目录中会生成appcan.keystore
+</code></pre><h5 id="微信中的应用签名"><a href="#微信中的应用签名" class="headerlink" title="微信中的应用签名"></a>微信中的应用签名</h5><pre><code>https://open.weixin.qq.com/zh_CN/htmledition/res/dev/download/sdk/Gen_Signature_Android.apk
+
+下载上面链接连接的apk
+安装在手机中,(前提已经安装好了测试应用程序)输入包名就可以获得应用签名
+</code></pre><h5 id="Tomcat8配置SSL证书"><a href="#Tomcat8配置SSL证书" class="headerlink" title="Tomcat8配置SSL证书"></a>Tomcat8配置SSL证书</h5><pre><code class="xml">&lt;Connector port=&quot;443&quot; protocol=&quot;org.apache.coyote.http11.Http11NioProtocol&quot;
+maxThreads=&quot;150&quot; SSLEnabled=&quot;true&quot; scheme=&quot;https&quot; secure=&quot;true&quot;
+clientAuth=&quot;false&quot; sslProtocol=&quot;TLS&quot;
+keystoreFile=&quot;/usr/local/tomcat/apache-tomcat-8.5.34/conf/1600186_api.wansuofangzhiwang.com.pfx&quot;
+keystoreType=&quot;PKCS12&quot;
+keystorePass=&quot;pBiQMHQ5&quot;
+/&gt;
+</code></pre>
+<h5 id="Tomcat8配置http转https"><a href="#Tomcat8配置http转https" class="headerlink" title="Tomcat8配置http转https"></a>Tomcat8配置http转https</h5><pre><code>1&gt;将8443端口处去除注释并改为
+
+    &lt;Connector port=&quot;443&quot; protocol=&quot;org.apache.coyote.http11.Http11NioProtocol&quot;
+        maxThreads=&quot;150&quot; SSLEnabled=&quot;true&quot; scheme=&quot;https&quot; secure=&quot;true&quot;
+        clientAuth=&quot;false&quot; sslProtocol=&quot;TLS&quot;
+        keystoreFile=&quot;/usr/local/tomcat/cert/1716150_www.moujiangyong.com.pfx&quot;
+        keystoreType=&quot;PKCS12&quot;
+        keystorePass=&quot;n1325755&quot;
+    /&gt;
+密钥文件与密码对号入座；
+
+2&gt;将8080端口改为80，8443改为443
+
+    &lt;Connector port=&quot;80&quot; protocol=&quot;HTTP/1.1&quot;
+               connectionTimeout=&quot;20000&quot;
+               redirectPort=&quot;443&quot; /&gt;
+
+这个设置后，请求地址也就无需连接端口号8080；
+
+3&gt;将8009处的8443改为443
+
+&lt;Connector port=&quot;8009&quot; protocol=&quot;AJP/1.3&quot; redirectPort=&quot;443&quot; /&gt;
+
+这样https请求时就不用自动附带8443端口了；
+
+ok,这样Https的设置就大功告成了。
+
+4.Http自动跳转Https
+①编辑conf/web.xml文件
+②在web.xml末尾加上如下配置：
+
+&lt;security-constraint&gt;
+
+    &lt;web-resource-collection &gt;
+
+              &lt;web-resource-name &gt;SSL&lt;/web-resource-name&gt;
+
+              &lt;url-pattern&gt;/*&lt;/url-pattern&gt;
+
+       &lt;/web-resource-collection&gt;
+
+       &lt;user-data-constraint&gt;
+
+       &lt;transport-guarantee&gt;CONFIDENTIAL&lt;/transport-guarantee&gt;
+
+       &lt;/user-data-constraint&gt;
+
+&lt;/security-constraint&gt;
+
+
+③重启Tomcat服务
+
+ 输入  ./startup.sh
+</code></pre><h5 id="nginx配置SSL证书"><a href="#nginx配置SSL证书" class="headerlink" title="nginx配置SSL证书"></a>nginx配置SSL证书</h5><pre><code class="js">    server {
+        listen       443 ssl;
+        server_name  api.wansuofangzhiwang.com;
+        ssl_certificate      /usr/local/nginx/cert/1600186_api.wansuofangzhiwang.com.pem;
+        ssl_certificate_key  /usr/local/nginx/cert/1600186_api.wansuofangzhiwang.com.key; 
+        location / {
+           proxy_pass http://127.0.0.1:9529/;
+        }    
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+    }
+
+    server {
+        listen       80;
+        server_name  admin.wansuofangzhiwang.com;
+        location / {
+
+           proxy_pass http://127.0.0.1:9527/;
+        }    
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+
+
+    }
+</code></pre>
+<h5 id="SpringBoot配置发送Email报错535"><a href="#SpringBoot配置发送Email报错535" class="headerlink" title="SpringBoot配置发送Email报错535"></a>SpringBoot配置发送Email报错535</h5><pre><code>解决方案：因为JDK1.8中jre\lib\security中两个 jar 包替换的缘故。将下载后的local_policy.jar和US_export_policy.jar替换到JDK1.8的jre\lib\security文件夹即可。
+
+地址：http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html
+
+</code></pre><h5 id="Mybatis逆向生成工具"><a href="#Mybatis逆向生成工具" class="headerlink" title="Mybatis逆向生成工具"></a>Mybatis逆向生成工具</h5><pre><code>https://github.com/zouzg/mybatis-generator-gui
+</code></pre><h5 id="IDEA真机测试安卓7-0解析报错"><a href="#IDEA真机测试安卓7-0解析报错" class="headerlink" title="IDEA真机测试安卓7.0解析报错"></a>IDEA真机测试安卓7.0解析报错</h5><pre><code>将setting-&gt;build,ex..-&gt;Instant Run的对勾去掉
+</code></pre><h5 id="JAVA运行环境默认不允许256位密钥的AES加解密"><a href="#JAVA运行环境默认不允许256位密钥的AES加解密" class="headerlink" title="JAVA运行环境默认不允许256位密钥的AES加解密"></a>JAVA运行环境默认不允许256位密钥的AES加解密</h5><p><a href="https://www.jianshu.com/p/6d3259e88b80" target="_blank" rel="noopener">https://www.jianshu.com/p/6d3259e88b80</a></p>
+<h5 id="springboot拦截器配置"><a href="#springboot拦截器配置" class="headerlink" title="springboot拦截器配置"></a>springboot拦截器配置</h5><pre><code>@Configuration
+public class AuthWebConfig extends WebMvcConfigurerAdapter {
+    @Override
+    public void addInterceptors(InterceptorRegistry registry){
+        registry.addInterceptor(new AuthInterceptor()).addPathPatterns(&quot;/**&quot;).excludePathPatterns(&quot;/admin/**&quot;).excludePathPatterns(&quot;/shop/**&quot;).excludePathPatterns(&quot;/**/*.do&quot;);
+    }
+}
+///////////////////////////////////////////////////////////
+public class AuthInterceptor implements HandlerInterceptor {}
+</code></pre><h5 id="PostConstruct-PreDestroy说明"><a href="#PostConstruct-PreDestroy说明" class="headerlink" title="@PostConstruct,@PreDestroy说明"></a>@PostConstruct,@PreDestroy说明</h5><p>1.@PostConstruct说明</p>
+<p>​     被@PostConstruct修饰的方法会在服务器加载Servlet的时候运行，并且只会被服务器调用一次，类似于Serclet的inti()方法。被@PostConstruct修饰的方法会在构造函数之后，init()方法之前运行。</p>
+<h5 id="2-PreDestroy说明"><a href="#2-PreDestroy说明" class="headerlink" title="2.@PreDestroy说明"></a>2.@PreDestroy说明</h5><p>​     被@PreDestroy修饰的方法会在服务器卸载Servlet的时候运行，并且只会被服务器调用一次，类似于Servlet的destroy()方法。被@PreDestroy修饰的方法会在destroy()方法之后运行</p>
+<h5 id="跨域异步请求不会携带cookie信息"><a href="#跨域异步请求不会携带cookie信息" class="headerlink" title="跨域异步请求不会携带cookie信息"></a>跨域异步请求不会携带cookie信息</h5><h5 id="前端-在异步请求上加上-withCredentials-true"><a href="#前端-在异步请求上加上-withCredentials-true" class="headerlink" title="前端:在异步请求上加上:withCredentials = true"></a>前端:在异步请求上加上:withCredentials = true</h5><p>使用axios解决办法:axios.defaults.withCredentials = true</p>
+<p>后端解决跨域:不能将:Access-Control-Allow-Origin在设置为”*”时将Access-Control-Allow-Credentials设置为true</p>
+<p>spring-boot-starter-cache的使用</p>
+<p><a href="https://www.cnblogs.com/yueshutong/p/9381540.html" target="_blank" rel="noopener">https://www.cnblogs.com/yueshutong/p/9381540.html</a></p>
+<h5 id="注意"><a href="#注意" class="headerlink" title="注意:"></a>注意:</h5><ol>
+<li>内部类在mybatis的result和springmvc转json使用时,需要使用$号代替,号,且需要使用静态内部类</li>
+</ol>
+</div><div class="post-copyright"><blockquote><p>原文作者: mjy</p><p>原文链接: <a href="http://blog.moujiangyong.com/2017/01/12/笔记/">http://blog.moujiangyong.com/2017/01/12/笔记/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2017/05/12/线程/" class="pre">线程的总结</a></div><div id="comments"></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-5"><a class="toc-link" href="#maven阿里云私服"><span class="toc-text">maven阿里云私服</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#导jar包到本地仓库"><span class="toc-text">导jar包到本地仓库</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#mybatis主键返回"><span class="toc-text">mybatis主键返回</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#mybatis属性类型-一对多-一对一"><span class="toc-text">mybatis属性类型,一对多,一对一</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#springboot返回的JSON数据非空处理"><span class="toc-text">springboot返回的JSON数据非空处理</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#springboot返回前端日期处理"><span class="toc-text">springboot返回前端日期处理</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#springboot日期处理"><span class="toc-text">springboot日期处理</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#springmvc文件下载"><span class="toc-text">springmvc文件下载</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#response返回JSON数据"><span class="toc-text">response返回JSON数据</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#解决跨域"><span class="toc-text">解决跨域</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#安卓生成证书"><span class="toc-text">安卓生成证书</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#微信中的应用签名"><span class="toc-text">微信中的应用签名</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Tomcat8配置SSL证书"><span class="toc-text">Tomcat8配置SSL证书</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Tomcat8配置http转https"><span class="toc-text">Tomcat8配置http转https</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#nginx配置SSL证书"><span class="toc-text">nginx配置SSL证书</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#SpringBoot配置发送Email报错535"><span class="toc-text">SpringBoot配置发送Email报错535</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Mybatis逆向生成工具"><span class="toc-text">Mybatis逆向生成工具</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#IDEA真机测试安卓7-0解析报错"><span class="toc-text">IDEA真机测试安卓7.0解析报错</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#JAVA运行环境默认不允许256位密钥的AES加解密"><span class="toc-text">JAVA运行环境默认不允许256位密钥的AES加解密</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#springboot拦截器配置"><span class="toc-text">springboot拦截器配置</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#PostConstruct-PreDestroy说明"><span class="toc-text">@PostConstruct,@PreDestroy说明</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2-PreDestroy说明"><span class="toc-text">2.@PreDestroy说明</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#跨域异步请求不会携带cookie信息"><span class="toc-text">跨域异步请求不会携带cookie信息</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#前端-在异步请求上加上-withCredentials-true"><span class="toc-text">前端:在异步请求上加上:withCredentials = true</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#注意"><span class="toc-text">注意:</span></a></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/09/21/JVM 配置常用参数和常用 GC 调优策略(转)/">jvm常用配置(转)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/01/开源项目/">开源项目</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/07/02/Linux安装环境/">Linux安装环境</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/17/String/">String.format()方法的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/30/常用递归的使用/">常用递归的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/23/feign和restTemplate的使用/">okhttp,feign,restTemplate的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/21/Java虚拟机调优/">Java虚拟机调优</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/logback的使用/">springboot-logback的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/21/spring-cloud之权限/">spring-cloud之权限</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/01/spring-cloud之链路追踪/">spring-cloud之链路追踪</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JVM/">JVM</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/http请求/">http请求</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/java8/">java8</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springboot/">springboot</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springcloud/">springcloud</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/前端/">前端</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客/">博客</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/搜索引擎/">搜索引擎</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/笔记/">笔记</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/线程/">线程</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/递归/">递归</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/项目/">项目</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/spring-cloud/" style="font-size: 15px;">spring cloud</a> <a href="/tags/资料/" style="font-size: 15px;">资料</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li></ul></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/baidusitemap.xml">网站地图</a> |  <a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><a href="https://beian.miit.gov.cn " rel="nofollow">蜀ICP备19003737号</a></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>

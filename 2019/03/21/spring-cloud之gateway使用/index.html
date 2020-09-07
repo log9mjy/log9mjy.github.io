@@ -1,0 +1,369 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="jiangyong's blog."><meta name="keywords" content="学习,记录,笔记"><title>spring-cloud之gateway使用 | 听雨时的忧愁</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">spring-cloud之gateway使用</h1><a id="logo" href="/.">听雨时的忧愁</a><p class="description">天下武功,唯快不破</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><div id="search-result"></div></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">spring-cloud之gateway使用</h1><div class="post-meta"><a href="/2019/03/21/spring-cloud之gateway使用/#comments" class="comment-count"></a><p><span class="date">Mar 21, 2019</span><span><a href="/categories/springcloud/" class="category">springcloud</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><p>Spring Cloud Gateway 是 Spring Cloud 的一个全新项目，该项目是基于 Spring 5.0，Spring Boot 2.0 和 Project Reactor 等技术开发的网关，它旨在为微服务架构提供一种简单有效的统一的 API 路由管理方式。</p>
+<p>Spring Cloud Gateway 作为 Spring Cloud 生态系统中的网关，目标是替代 Netflix Zuul，其不仅提供统一的路由方式，并且基于 Filter 链的方式提供了网关基本的功能，例如：安全，监控/指标，和限流。</p>
+<h2 id="一-相关概念"><a href="#一-相关概念" class="headerlink" title="一 . 相关概念:"></a>一 . 相关概念:</h2><ul>
+<li>Route（路由）：这是网关的基本构建块。它由一个 ID，一个目标 URI，一组断言和一组过滤器定义。如果断言为真，则路由匹配。</li>
+<li>Predicate（断言）：这是一个 Java 8 的 Predicate。输入类型是一个 ServerWebExchange。我们可以使用它来匹配来自 HTTP 请求的任何内容，例如 headers 或参数。</li>
+<li><img src="https://forezp.obs.myhuaweicloud.com/img/jianshu/12191355-7c74ff861a209cd9.png" alt></li>
+<li>Filter（过滤器）：这是<code>org.springframework.cloud.gateway.filter.GatewayFilter</code>的实例，我们可以使用它修改请求和响应。</li>
+<li><img src="https://forezp.obs.myhuaweicloud.com/img/jianshu/2279594-21f95f970275e70f.png" alt></li>
+</ul>
+<h2 id="二-案例"><a href="#二-案例" class="headerlink" title="二  .案例"></a>二  .案例</h2><pre><code class="java">&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-starter-gateway&lt;/artifactId&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-config-client&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre>
+<pre><code class="Java">@SpringBootApplication
+@EnableDiscoveryClient
+public class MjyGatewayApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(MjyGatewayApplication.class, args);
+    }
+
+}
+</code></pre>
+<pre><code class="Java">spring.application.name=mjy-gateway
+
+server.port =9999
+
+# 设为 true 便开启通过服务中心的自动根据 serviceId 创建路由的功能。
+# spring.cloud.gateway.discovery.locator.enabled= true
+
+# service-id 设置为小写ID
+# spring.cloud.gateway.discovery.locator.lower-case-service-id=true
+
+spring.cloud.gateway.routes[0].id=order_router
+spring.cloud.gateway.routes[0].uri=lb://mjy-order  #mjy-order为注册的服务名，多个实现负载均衡
+spring.cloud.gateway.routes[0].predicates[0]=Path=/order/**
+
+spring.cloud.gateway.routes[1].id=product_router
+spring.cloud.gateway.routes[1].uri=lb://mjy-product
+spring.cloud.gateway.routes[1].predicates[0]=Path=/product/**
+</code></pre>
+<ul>
+<li>id：我们自定义的路由 ID，保持唯一</li>
+<li>uri：目标服务地址</li>
+<li>predicates：路由条件，Predicate 接受一个输入参数，返回一个布尔值结果。该接口包含多种默认方法来将 Predicate 组合成其他复杂的逻辑（比如：与，或，非）。</li>
+<li>filters：过滤规则，本示例暂时没用。</li>
+</ul>
+<p>也可以在代码当中加入</p>
+<pre><code class="Java">@Bean
+    public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
+        return builder.routes()
+                .route(&quot;path_route&quot;, r -&gt; r.path(&quot;/about&quot;)
+                        .uri(&quot;http://ityouknow.com&quot;))
+                .build();
+    }
+</code></pre>
+<h2 id="三-路由规则"><a href="#三-路由规则" class="headerlink" title="三. 路由规则"></a>三. 路由规则</h2><h3 id="通过时间匹配"><a href="#通过时间匹配" class="headerlink" title="通过时间匹配"></a>通过时间匹配</h3><p>Predicate 支持设置一个时间，在请求进行转发的时候，可以通过判断在这个时间之前或者之后进行转发。比如我们现在设置只有在2019年1月1日才会转发到我的网站，在这之前不进行转发，我就可以这样配置：</p>
+<pre><code>spring:
+  cloud:
+    gateway:
+      routes:
+       - id: time_route
+        uri: http://ityouknow.com
+        predicates:
+         - After=2018-01-20T06:06:06+08:00[Asia/Shanghai]
+</code></pre><p>Spring 是通过 ZonedDateTime 来对时间进行的对比，ZonedDateTime 是 Java 8 中日期时间功能里，用于表示带时区的日期与时间信息的类，ZonedDateTime 支持通过时区来设置时间，中国的时区是：<code>Asia/Shanghai</code>。</p>
+<p>After Route Predicate 是指在这个时间之后的请求都转发到目标地址。上面的示例是指，请求时间在 2018年1月20日6点6分6秒之后的所有请求都转发到地址<code>http://ityouknow.com</code>。<code>+08:00</code>是指时间和UTC时间相差八个小时，时间地区为<code>Asia/Shanghai</code>。</p>
+<p>添加完路由规则之后，访问地址<code>http://localhost:8080</code>会自动转发到<code>http://ityouknow.com</code>。</p>
+<p>Before Route Predicate 刚好相反，在某个时间之前的请求的请求都进行转发。我们把上面路由规则中的 After 改为 Before，如下：</p>
+<pre><code>spring:
+  cloud:
+    gateway:
+      routes:
+       - id: after_route
+        uri: http://ityouknow.com
+        predicates:
+         - Before=2018-01-20T06:06:06+08:00[Asia/Shanghai]
+</code></pre><p>就表示在这个时间之前可以进行路由，在这时间之后停止路由，修改完之后重启项目再次访问地址<code>http://localhost:8080</code>，页面会报 404 没有找到地址。</p>
+<p>除过在时间之前或者之后外，Gateway 还支持限制路由请求在某一个时间段范围内，可以使用 Between Route Predicate 来实现。</p>
+<pre><code>spring:
+  cloud:
+    gateway:
+      routes:
+       - id: after_route
+        uri: http://ityouknow.com
+        predicates:
+         - Between=2018-01-20T06:06:06+08:00[Asia/Shanghai], 2019-01-20T06:06:06+08:00[Asia/Shanghai]
+</code></pre><p>这样设置就意味着在这个时间段内可以匹配到此路由，超过这个时间段范围则不会进行匹配。通过时间匹配路由的功能很酷，可以用在限时抢购的一些场景中。</p>
+<h3 id="通过-Cookie-匹配"><a href="#通过-Cookie-匹配" class="headerlink" title="通过 Cookie 匹配"></a>通过 Cookie 匹配</h3><p>Cookie Route Predicate 可以接收两个参数，一个是 Cookie name ,一个是正则表达式，路由规则会通过获取对应的 Cookie name 值和正则表达式去匹配，如果匹配上就会执行路由，如果没有匹配上则不执行。</p>
+<pre><code>spring:
+  cloud:
+    gateway:
+      routes:
+       - id: cookie_route
+         uri: http://ityouknow.com
+         predicates:
+         - Cookie=ityouknow, kee.e
+</code></pre><p>使用 curl 测试，命令行输入:</p>
+<pre><code>curl http://localhost:8080 --cookie &quot;ityouknow=kee.e&quot;
+</code></pre><p>则会返回页面代码，如果去掉<code>--cookie &quot;ityouknow=kee.e&quot;</code>，后台汇报 404 错误。</p>
+<h3 id="通过-Header-属性匹配"><a href="#通过-Header-属性匹配" class="headerlink" title="通过 Header 属性匹配"></a>通过 Header 属性匹配</h3><p>Header Route Predicate 和 Cookie Route Predicate 一样，也是接收 2 个参数，一个 header 中属性名称和一个正则表达式，这个属性值和正则表达式匹配则执行。</p>
+<pre><code>spring:
+  cloud:
+    gateway:
+      routes:
+      - id: header_route
+        uri: http://ityouknow.com
+        predicates:
+        - Header=X-Request-Id, \d+
+</code></pre><p>使用 curl 测试，命令行输入:</p>
+<pre><code>curl http://localhost:8080  -H &quot;X-Request-Id:666666&quot; 
+</code></pre><p>则返回页面代码证明匹配成功。将参数<code>-H &quot;X-Request-Id:666666&quot;</code>改为<code>-H &quot;X-Request-Id:neo&quot;</code>再次执行时返回404证明没有匹配。</p>
+<h3 id="通过-Host-匹配"><a href="#通过-Host-匹配" class="headerlink" title="通过 Host 匹配"></a>通过 Host 匹配</h3><p>Host Route Predicate 接收一组参数，一组匹配的域名列表，这个模板是一个 ant 分隔的模板，用<code>.</code>号作为分隔符。它通过参数中的主机地址作为匹配规则。</p>
+<pre><code>spring:
+  cloud:
+    gateway:
+      routes:
+      - id: host_route
+        uri: http://ityouknow.com
+        predicates:
+        - Host=**.ityouknow.com
+</code></pre><p>使用 curl 测试，命令行输入:</p>
+<pre><code>curl http://localhost:8080  -H &quot;Host: www.ityouknow.com&quot; 
+curl http://localhost:8080  -H &quot;Host: md.ityouknow.com&quot; 
+</code></pre><p>经测试以上两种 host 均可匹配到 host_route 路由，去掉 host 参数则会报 404 错误。</p>
+<h3 id="通过请求方式匹配"><a href="#通过请求方式匹配" class="headerlink" title="通过请求方式匹配"></a>通过请求方式匹配</h3><p>可以通过是 POST、GET、PUT、DELETE 等不同的请求方式来进行路由。</p>
+<pre><code>spring:
+  cloud:
+    gateway:
+      routes:
+      - id: method_route
+        uri: http://ityouknow.com
+        predicates:
+        - Method=GET
+</code></pre><p>使用 curl 测试，命令行输入:</p>
+<pre><code># curl 默认是以 GET 的方式去请求
+curl http://localhost:8080
+</code></pre><p>测试返回页面代码，证明匹配到路由，我们再以 POST 的方式请求测试。</p>
+<pre><code># curl 默认是以 GET 的方式去请求
+curl -X POST http://localhost:8080
+</code></pre><p>返回 404 没有找到，证明没有匹配上路由</p>
+<h3 id="通过请求路径匹配"><a href="#通过请求路径匹配" class="headerlink" title="通过请求路径匹配"></a>通过请求路径匹配</h3><p>Path Route Predicate 接收一个匹配路径的参数来判断是否走路由。</p>
+<pre><code>spring:
+  cloud:
+    gateway:
+      routes:
+      - id: host_route
+        uri: http://ityouknow.com
+        predicates:
+        - Path=/foo/{segment}
+</code></pre><p>如果请求路径符合要求，则此路由将匹配，例如：/foo/1 或者 /foo/bar。</p>
+<p>使用 curl 测试，命令行输入:</p>
+<pre><code>curl http://localhost:8080/foo/1
+curl http://localhost:8080/foo/xx
+curl http://localhost:8080/boo/xx
+</code></pre><p>经过测试第一和第二条命令可以正常获取到页面返回值，最后一个命令报404，证明路由是通过指定路由来匹配。</p>
+<h3 id="通过请求参数匹配"><a href="#通过请求参数匹配" class="headerlink" title="通过请求参数匹配"></a>通过请求参数匹配</h3><p>Query Route Predicate 支持传入两个参数，一个是属性名一个为属性值，属性值可以是正则表达式。</p>
+<pre><code>spring:
+  cloud:
+    gateway:
+      routes:
+      - id: query_route
+        uri: http://ityouknow.com
+        predicates:
+        - Query=smile
+</code></pre><p>这样配置，只要请求中包含 smile 属性的参数即可匹配路由。</p>
+<p>使用 curl 测试，命令行输入:</p>
+<pre><code>curl localhost:8080?smile=x&amp;id=2
+</code></pre><p>经过测试发现只要请求汇总带有 smile 参数即会匹配路由，不带 smile 参数则不会匹配。</p>
+<p>还可以将 Query 的值以键值对的方式进行配置，这样在请求过来时会对属性值和正则进行匹配，匹配上才会走路由。</p>
+<pre><code>spring:
+  cloud:
+    gateway:
+      routes:
+      - id: query_route
+        uri: http://ityouknow.com
+        predicates:
+        - Query=keep, pu.
+</code></pre><p>这样只要当请求中包含 keep 属性并且参数值是以 pu 开头的长度为三位的字符串才会进行匹配和路由。</p>
+<p>使用 curl 测试，命令行输入:</p>
+<pre><code>curl localhost:8080?keep=pub
+</code></pre><p>测试可以返回页面代码，将 keep 的属性值改为 pubx 再次访问就会报 404,证明路由需要匹配正则表达式才会进行路由。</p>
+<h3 id="通过请求-ip-地址进行匹配"><a href="#通过请求-ip-地址进行匹配" class="headerlink" title="通过请求 ip 地址进行匹配"></a>通过请求 ip 地址进行匹配</h3><p>Predicate 也支持通过设置某个 ip 区间号段的请求才会路由，RemoteAddr Route Predicate 接受 cidr 符号(IPv4 或 IPv6 )字符串的列表(最小大小为1)，例如 192.168.0.1/16 (其中 192.168.0.1 是 IP 地址，16 是子网掩码)。</p>
+<pre><code>spring:
+  cloud:
+    gateway:
+      routes:
+      - id: remoteaddr_route
+        uri: http://ityouknow.com
+        predicates:
+        - RemoteAddr=192.168.1.1/24
+</code></pre><p>可以将此地址设置为本机的 ip 地址进行测试。</p>
+<pre><code>curl localhost:8080
+</code></pre><p>果请求的远程地址是 192.168.1.10，则此路由将匹配。</p>
+<h3 id="组合使用"><a href="#组合使用" class="headerlink" title="组合使用"></a>组合使用</h3><p>上面为了演示各个 Predicate 的使用，我们是单个单个进行配置测试，其实可以将各种 Predicate 组合起来一起使用。</p>
+<p>例如：</p>
+<pre><code>spring:
+  cloud:
+    gateway:
+      routes:
+       - id: host_foo_path_headers_to_httpbin
+        uri: http://ityouknow.com
+        predicates:
+        - Host=**.foo.org
+        - Path=/headers
+        - Method=GET
+        - Header=X-Request-Id, \d+
+        - Query=foo, ba.
+        - Query=baz
+        - Cookie=chocolate, ch.p
+        - After=2018-01-20T06:06:06+08:00[Asia/Shanghai]
+</code></pre><p>各种 Predicates 同时存在于同一个路由时，请求必须同时满足所有的条件才被这个路由匹配。</p>
+<h2 id="四：过滤器使用"><a href="#四：过滤器使用" class="headerlink" title="四：过滤器使用"></a>四：过滤器使用</h2><h2 id="修改请求路径的过滤器"><a href="#修改请求路径的过滤器" class="headerlink" title="修改请求路径的过滤器"></a>修改请求路径的过滤器</h2><p><strong>StripPrefix Filter</strong></p>
+<p>StripPrefix Filter 是一个请求路径截取的功能，我们可以利用这个功能来做特殊业务的转发。</p>
+<p>application.yml 配置如下：</p>
+<pre><code>spring:
+  cloud:
+    gateway:
+      routes:
+      - id: nameRoot
+        uri: http://nameservice
+        predicates:
+        - Path=/name/**
+        filters:
+        - StripPrefix=2
+</code></pre><p>上面这个配置的例子表示，当请求路径匹配到<code>/name/**</code>会将包含name和后边的字符串接去掉转发， <code>StripPrefix=2</code>就代表截取路径的个数，这样配置后当请求<code>/name/bar/foo</code>后端匹配到的请求路径就会变成<code>http://nameservice/foo</code>。</p>
+<p>我们还是在 cloud-gateway-eureka 项目中进行测试，修改 application.yml 如下：</p>
+<pre><code>spring:
+  cloud:
+     routes:
+     - id: nameRoot
+       uri: lb://spring-cloud-producer
+       predicates:
+       - Path=/name/**
+       filters:
+       - StripPrefix=2
+</code></pre><p>配置完后重启 cloud-gateway-eureka 项目，访问地址：<code>http://localhost:8888/name/foo/hello</code>页面会交替显示：</p>
+<pre><code>hello world!
+hello world smile!
+</code></pre><p>和直接访问地址 <code>http://localhost:8888/hello</code>展示的效果一致，说明请求路径中的 <code>name/foo/</code> 已经被截取。</p>
+<p><strong>PrefixPath Filter</strong></p>
+<p>PrefixPath Filter 的作用和 StripPrefix 正相反，是在 URL 路径前面添加一部分的前缀</p>
+<pre><code>spring:
+  cloud:
+    gateway:
+      routes:
+      - id: prefixpath_route
+        uri: http://example.org
+        filters:
+        - PrefixPath=/mypath
+</code></pre><p>大家可以下来去测试，这里不在演示。</p>
+<h2 id="限速路由器"><a href="#限速路由器" class="headerlink" title="限速路由器"></a>限速路由器</h2><p>限速在高并发场景中比较常用的手段之一，可以有效的保障服务的整体稳定性，Spring Cloud Gateway 提供了基于 Redis 的限流方案。所以我们首先需要添加对应的依赖包<code>spring-boot-starter-data-redis-reactive</code></p>
+<pre><code>&lt;dependency&gt;
+  &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+  &lt;artifactId&gt;spring-boot-starter-data-redis-reactive&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre><p>配置文件中需要添加 Redis 地址和限流的相关配置</p>
+<pre><code>spring:
+  application:
+    name: cloud-gateway-eureka
+  redis:
+    host: localhost
+    password:
+    port: 6379
+  cloud:
+    gateway:
+     discovery:
+        locator:
+         enabled: true
+     routes:
+     - id: requestratelimiter_route
+       uri: http://example.org
+       filters:
+       - name: RequestRateLimiter
+         args:
+           redis-rate-limiter.replenishRate: 10
+           redis-rate-limiter.burstCapacity: 20
+           key-resolver: &quot;#{@userKeyResolver}&quot;
+       predicates:
+         - Method=GET
+</code></pre><ul>
+<li>filter 名称必须是 RequestRateLimiter</li>
+<li>redis-rate-limiter.replenishRate：允许用户每秒处理多少个请求</li>
+<li>redis-rate-limiter.burstCapacity：令牌桶的容量，允许在一秒钟内完成的最大请求数</li>
+<li>key-resolver：使用 SpEL 按名称引用 bean</li>
+</ul>
+<p>项目中设置限流的策略，创建 Config 类。</p>
+<pre><code>public class Config {
+
+    @Bean
+    KeyResolver userKeyResolver() {
+        return exchange -&gt; Mono.just(exchange.getRequest().getQueryParams().getFirst(&quot;user&quot;));
+    }
+}
+</code></pre><p>根据请求参数中的 user 字段来限流，也可以设置根据请求 IP 地址来限流，设置如下:</p>
+<pre><code>@Bean
+public KeyResolver ipKeyResolver() {
+    return exchange -&gt; Mono.just(exchange.getRequest().getRemoteAddress().getHostName());
+}
+</code></pre><p>这样网关就可以根据不同策略来对请求进行限流了。</p>
+<h2 id="熔断路由器"><a href="#熔断路由器" class="headerlink" title="熔断路由器"></a>熔断路由器</h2><p>在之前的 Spring Cloud 系列文章中，大家对熔断应该有了一定的了解，如过不了解可以先读这篇文章：<a href="http://www.ityouknow.com/springcloud/2017/05/16/springcloud-hystrix.html" target="_blank" rel="noopener">熔断器 Hystrix</a></p>
+<p>Spring Cloud Gateway 也可以利用 Hystrix 的熔断特性，在流量过大时进行服务降级，同样我们还是首先给项目添加上依赖。</p>
+<pre><code>&lt;dependency&gt;
+  &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+  &lt;artifactId&gt;spring-cloud-starter-netflix-hystrix&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre><p>配置示例</p>
+<pre><code>spring:
+  cloud:
+    gateway:
+      routes:
+      - id: hystrix_route
+        uri: http://example.org
+        filters:
+        - Hystrix=myCommandName
+</code></pre><p>配置后，gateway 将使用 myCommandName 作为名称生成 HystrixCommand 对象来进行熔断管理。如果想添加熔断后的回调内容，需要在添加一些配置。</p>
+<pre><code>spring:
+  cloud:
+    gateway:
+      routes:
+      - id: hystrix_route
+        uri: lb://spring-cloud-producer
+        predicates:
+        - Path=/consumingserviceendpoint
+        filters:
+        - name: Hystrix
+          args:
+            name: fallbackcmd
+            fallbackUri: forward:/incaseoffailureusethis
+</code></pre><p><code>fallbackUri: forward:/incaseoffailureusethis</code>配置了 fallback 时要会调的路径，当调用 Hystrix 的 fallback 被调用时，请求将转发到<code>/incaseoffailureuset</code>这个 URI。</p>
+<h2 id="重试路由器"><a href="#重试路由器" class="headerlink" title="重试路由器"></a>重试路由器</h2><p>RetryGatewayFilter 是 Spring Cloud Gateway 对请求重试提供的一个 GatewayFilter Factory</p>
+<p>配置示例：</p>
+<pre><code>spring:
+  cloud:
+    gateway:
+      routes:
+      - id: retry_test
+        uri: lb://spring-cloud-producer
+        predicates:
+        - Path=/retry
+        filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY
+</code></pre><p>Retry GatewayFilter 通过这四个参数来控制重试机制： retries, statuses, methods, 和 series。</p>
+<ul>
+<li>retries：重试次数，默认值是 3 次</li>
+<li>statuses：HTTP 的状态返回码，取值请参考：<code>org.springframework.http.HttpStatus</code></li>
+<li>methods：指定哪些方法的请求需要进行重试逻辑，默认值是 GET 方法，取值参考：<code>org.springframework.http.HttpMethod</code></li>
+<li>series：一些列的状态码配置，取值参考：<code>org.springframework.http.HttpStatus.Series</code>。符合的某段状态码才会进行重试逻辑，默认值是 SERVER_ERROR，值是 5，也就是 5XX(5 开头的状态码)，共有5 个值。</li>
+</ul>
+<p><strong>添加参数过滤器</strong></p>
+<p><strong>application.yml配置示例</strong></p>
+<pre><code>spring:
+  cloud:
+    gateway:
+      routes:
+      - id: add_request_parameter_route
+        uri: http://example.org
+        filters:
+        - AddRequestParameter=foo, bar
+</code></pre><p>这样就会给匹配的每个请求添加上<code>foo=bar</code>的参数和值。</p>
+</div><div class="post-copyright"><blockquote><p>原文作者: mjy</p><p>原文链接: <a href="http://blog.moujiangyong.com/2019/03/21/spring-cloud之gateway使用/">http://blog.moujiangyong.com/2019/03/21/spring-cloud之gateway使用/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2019/04/01/spring-cloud之链路追踪/" class="pre">spring-cloud之链路追踪</a><a href="/2019/03/18/spring-cloud之config/" class="next">spring-cloud之config</a></div><div id="comments"></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#一-相关概念"><span class="toc-text">一 . 相关概念:</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二-案例"><span class="toc-text">二  .案例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三-路由规则"><span class="toc-text">三. 路由规则</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#通过时间匹配"><span class="toc-text">通过时间匹配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#通过-Cookie-匹配"><span class="toc-text">通过 Cookie 匹配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#通过-Header-属性匹配"><span class="toc-text">通过 Header 属性匹配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#通过-Host-匹配"><span class="toc-text">通过 Host 匹配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#通过请求方式匹配"><span class="toc-text">通过请求方式匹配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#通过请求路径匹配"><span class="toc-text">通过请求路径匹配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#通过请求参数匹配"><span class="toc-text">通过请求参数匹配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#通过请求-ip-地址进行匹配"><span class="toc-text">通过请求 ip 地址进行匹配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#组合使用"><span class="toc-text">组合使用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#四：过滤器使用"><span class="toc-text">四：过滤器使用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#修改请求路径的过滤器"><span class="toc-text">修改请求路径的过滤器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#限速路由器"><span class="toc-text">限速路由器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#熔断路由器"><span class="toc-text">熔断路由器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#重试路由器"><span class="toc-text">重试路由器</span></a></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/09/21/JVM 配置常用参数和常用 GC 调优策略(转)/">jvm常用配置(转)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/01/开源项目/">开源项目</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/07/02/Linux安装环境/">Linux安装环境</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/17/String/">String.format()方法的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/30/常用递归的使用/">常用递归的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/23/feign和restTemplate的使用/">okhttp,feign,restTemplate的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/21/Java虚拟机调优/">Java虚拟机调优</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/logback的使用/">springboot-logback的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/21/spring-cloud之权限/">spring-cloud之权限</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/01/spring-cloud之链路追踪/">spring-cloud之链路追踪</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JVM/">JVM</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/http请求/">http请求</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/java8/">java8</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springboot/">springboot</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springcloud/">springcloud</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/前端/">前端</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客/">博客</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/搜索引擎/">搜索引擎</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/笔记/">笔记</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/线程/">线程</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/递归/">递归</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/项目/">项目</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/spring-cloud/" style="font-size: 15px;">spring cloud</a> <a href="/tags/资料/" style="font-size: 15px;">资料</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li></ul></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/baidusitemap.xml">网站地图</a> |  <a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><a href="https://beian.miit.gov.cn " rel="nofollow">蜀ICP备19003737号</a></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>

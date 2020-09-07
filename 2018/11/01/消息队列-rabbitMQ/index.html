@@ -1,0 +1,272 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="jiangyong's blog."><meta name="keywords" content="学习,记录,笔记"><title>消息队列rabbitMQ的使用 | 听雨时的忧愁</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">消息队列rabbitMQ的使用</h1><a id="logo" href="/.">听雨时的忧愁</a><p class="description">天下武功,唯快不破</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><div id="search-result"></div></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">消息队列rabbitMQ的使用</h1><div class="post-meta"><a href="/2018/11/01/消息队列-rabbitMQ/#comments" class="comment-count"></a><p><span class="date">Nov 01, 2018</span><span><a href="/categories/消息队列/" class="category">消息队列</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><p>消息队列中间件是分布式系统中重要的组件，主要解决应用耦合，异步消息，流量削锋等问题.</p>
+<p>rbbitMQ是用Erlang语言实现的，它有几个概念：</p>
+<pre><code>broker：消息队列服务器实体。
+exchange：消息交换机，它指定消息按什么规则，路由到哪个队列。
+queue：消息队列，每个消息都会被投入到一个或多个队列。
+binding：绑定，它的作用就是把exchange和queue按照路由规则绑定起来。
+routing Key：路由关键字，exchange根据这个关键字进行消息投递。
+vhost：虚拟主机，一个broker里可以开设多个vhost，用作不同用户的权限分离。
+producer：消息生产者，就是投递消息的程序。
+consumer：消息消费者，就是接受消息的程序。
+channel：消息通道，在客户端的每个连接里，可建立多个channel，每个channel代表一个会话任务。
+</code></pre><p>消息队列的使用过程大概如下：</p>
+<pre><code>（1）客户端连接到消息队列服务器broker，打开一个channel。
+（2）客户端声明一个exchange，并设置相关属性。
+（3）客户端声明一个queue，并设置相关属性。
+（4）客户端使用routing key，在exchange和queue之间建立好绑定关系。
+（5）客户端投递消息到exchange。
+（6）exchange接收到消息后，就根据消息的key和已经设置的binding，进行消息路由，将消息投递到一个或多个队列里。
+</code></pre><h2 id="一-环境安装"><a href="#一-环境安装" class="headerlink" title="一.环境安装"></a>一.环境安装</h2><p>1.由于RabbitMQ是用Erlang语言编写的，因此需要先安装Erlang。通过<a href="http://www.erlang.org/downloads" target="_blank" rel="noopener">http://www.erlang.org/downloads</a>获取对应安装文件进行安装,MQ下载地址<a href="https://www.rabbitmq.com/download.html" target="_blank" rel="noopener">https://www.rabbitmq.com/download.html</a></p>
+<p>2.运行命令rabbitmq-plugins enable rabbitmq_management 开启Web管理插件</p>
+<p>3.通过浏览器访问<a href="http://localhost:15672，并通过默认用户guest进行登录，密码也是guest，登录后的页面：" target="_blank" rel="noopener">http://localhost:15672，并通过默认用户guest进行登录，密码也是guest，登录后的页面：</a></p>
+<p>RabbitMQ中，所有生产者提交的消息都由Exchange来接受，然后Exchange按照特定的策略转发到Queue进行存储<br>RabbitMQ提供了四种Exchange：fanout,direct,topic,header</p>
+<h2 id="二-Exchange说明"><a href="#二-Exchange说明" class="headerlink" title="二.Exchange说明"></a>二.Exchange说明</h2><h3 id="一-DirectExchange"><a href="#一-DirectExchange" class="headerlink" title="一.DirectExchange"></a>一.DirectExchange</h3><p>任何发送到Direct Exchange的消息都会被转发到RouteKey中指定的Queue。</p>
+<p>1.一般情况可以使用rabbitMQ自带的Exchange：””(该Exchange的名字为空字符串，下文称其为default Exchange)。</p>
+<p>2.这种模式下不需要将Exchange进行任何绑定(binding)操作</p>
+<p>3.消息传递时需要一个“RouteKey”，可以简单的理解为要发送到的队列名字。</p>
+<p>4.如果vhost中不存在RouteKey中指定的队列名，则该消息会被抛弃。</p>
+<h3 id="二-Fanout-Exchange"><a href="#二-Fanout-Exchange" class="headerlink" title="二.Fanout Exchange"></a>二.Fanout Exchange</h3><p>任何发送到Fanout Exchange的消息都会被转发到与该Exchange绑定(Binding)的所有Queue上。</p>
+<p>1.可以理解为路由表的模式</p>
+<p>2.这种模式不需要RouteKey</p>
+<p>3.这种模式需要提前将Exchange与Queue进行绑定，一个Exchange可以绑定多个Queue，一个Queue可以同多个Exchange进行绑定。</p>
+<p>4.如果接受到消息的Exchange没有与任何Queue绑定，则消息会被抛弃。</p>
+<h3 id="三-Topic-Exchange"><a href="#三-Topic-Exchange" class="headerlink" title="三.Topic Exchange"></a>三.Topic Exchange</h3><p>任何发送到Topic Exchange的消息都会被转发到所有关心RouteKey中指定话题的Queue上</p>
+<p>1.这种模式较为复杂，简单来说，就是每个队列都有其关心的主题，所有的消息都带有一个“标题”(RouteKey)，Exchange会将消息转发到所有关注主题能与RouteKey模糊匹配的队列。</p>
+<p>2.这种模式需要RouteKey，也许要提前绑定Exchange与Queue。</p>
+<p>3.在进行绑定时，要提供一个该队列关心的主题，如“#.log.#”表示该队列关心所有涉及log的消息(一个RouteKey为”MQ.log.error”的消息会被转发到该队列)。</p>
+<p>4.“#”表示0个或若干个关键字，“”表示一个关键字。如“log.”能与“log.warn”匹配，无法与“log.warn.timeout”匹配；但是“log.#”能与上述两者匹配。</p>
+<p>5.同样，如果Exchange没有发现能够与RouteKey匹配的Queue，则会抛弃此消息。</p>
+<h2 id="三springboot整合"><a href="#三springboot整合" class="headerlink" title="三springboot整合"></a>三springboot整合</h2><h3 id="一-导入依赖"><a href="#一-导入依赖" class="headerlink" title="一.导入依赖"></a>一.导入依赖</h3><pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-amqp&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre><h3 id="二-配置文件"><a href="#二-配置文件" class="headerlink" title="二.配置文件"></a>二.配置文件</h3><p>消息生产者</p>
+<pre><code>spring.application.name=springboot-rabbitmq
+server.port=9511
+
+spring.rabbitmq.host=127.0.0.1
+spring.rabbitmq.port=5672
+spring.rabbitmq.username=guest
+spring.rabbitmq.password=guest
+spring.rabbitmq.publisher-confirms=true
+spring.rabbitmq.virtual-host=/
+# 手动ACK 不开启自动ACK模式,目的是防止报错后未正确处理消息丢失 默认 为 none
+spring.rabbitmq.listener.simple.acknowledge-mode=manual
+</code></pre><p>消息消费者</p>
+<pre><code>spring.application.name=springboot-rabbitmq
+server.port=9512
+
+
+spring.rabbitmq.host=127.0.0.1
+spring.rabbitmq.port=5672
+spring.rabbitmq.username=guest
+spring.rabbitmq.password=guest
+spring.rabbitmq.publisher-confirms=true
+spring.rabbitmq.virtual-host=/
+# 手动ACK 不开启自动ACK模式,目的是防止报错后未正确处理消息丢失 默认 为 none
+spring.rabbitmq.listener.simple.acknowledge-mode=manual
+</code></pre><h3 id="三-消息生产者"><a href="#三-消息生产者" class="headerlink" title="三.消息生产者"></a>三.消息生产者</h3><pre><code class="java">package com.example.producer.mq;
+
+import com.example.common.cons.MqType;
+import com.example.common.model.Order;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.amqp.support.converter.AbstractJavaTypeMapper;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+/**
+ * @Author jiangyong
+ * @Description TODO
+ * @Date 2018/6/14 12:53
+ **/
+@Component
+@Slf4j
+public class OrderMqHandler {
+
+    private AmqpTemplate amqpTemplate;
+
+
+    public OrderMqHandler(AmqpTemplate amqpTemplate) {
+        this.amqpTemplate = amqpTemplate;
+    }
+
+    public void sendGenerateOrder() {
+        log.info(&quot;--------发送消息&quot;);
+        Order order = new Order();
+        order.setId(1);
+        order.setAmount(100);
+        order.setName(&quot;苹果手机&quot;);
+        order.setOrderNo(&quot;20190910&quot;);
+        amqpTemplate.convertAndSend(MqType.ORDER_QUEUE, order);
+    }
+     /**
+     *发送延时消息
+     **/
+    public void sendDelay() {
+        Order order = new Order();
+        order.setId(1);
+        order.setAmount(100);
+        order.setName(&quot;苹果手机&quot;);
+        order.setOrderNo(&quot;20190922&quot;);
+        amqpTemplate.convertAndSend(MqType.REGISTER_DELAY_EXCHANGE, MqType.DELAY_ROUTING_KEY, order, message -&gt; {
+            // TODO 第一句是可要可不要,根据自己需要自行处理
+            message.getMessageProperties().setHeader(AbstractJavaTypeMapper.DEFAULT_CONTENT_CLASSID_FIELD_NAME, Order.class.getName());
+            // TODO 如果配置了 params.put(&quot;x-message-ttl&quot;, 5 * 1000); 那么这一句也可以省略,具体根据业务需要是声明 Queue 的时候就指定好延迟时间还是在发送自己控制时间
+            message.getMessageProperties().setExpiration(5 * 1000 + &quot;&quot;);
+            return message;
+        });
+        log.info(&quot;发送消息时间:{}&quot;, LocalDateTime.now().format(DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm:ss&quot;)));
+    }
+
+}
+</code></pre>
+<h3 id="四-消息消费者"><a href="#四-消息消费者" class="headerlink" title="四.消息消费者"></a>四.消息消费者</h3><pre><code class="java">package com.example.consumer.config;
+
+import com.example.common.cons.MqType;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.*;
+import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * @Author jiangyong
+ * @Description TODO
+ * @Date 2018/6/14 14:39
+ **/
+@Configuration
+@Slf4j
+public class MqConfig {
+
+
+    @Bean
+    public Queue orderQueue() {
+        // 第一个是 QUEUE 的名字,第二个是消息是否需要持久化处理(消息会持久化在磁盘中)
+        return new Queue(MqType.ORDER_QUEUE, true);
+    }
+
+    /**
+     * 延迟队列配置
+     * &lt;p&gt;
+     * 1、params.put(&quot;x-message-ttl&quot;, 5 * 1000);
+     * TODO 第一种方式是直接设置 Queue 延迟时间 但如果直接给队列设置过期时间,这种做法不是很灵活,（当然二者是兼容的,默认是时间小的优先）
+     * 2、rabbitTemplate.convertAndSend(book, message -&gt; {
+     * message.getMessageProperties().setExpiration(2 * 1000 + &quot;&quot;);
+     * return message;
+     * });
+     * TODO 第二种就是每次发送消息动态设置延迟时间,这样我们可以灵活控制,
+     * TODO 在消息过期时,就会转发消息amqpTemplate.convertAndSend(exchange,routingKey,...)
+     *
+     **/
+    @Bean
+    public Queue delayProcessQueue() {
+        Map&lt;String, Object&gt; params = new HashMap&lt;&gt;();
+        // x-dead-letter-exchange 声明了队列里的死信转发到的DLX名称，
+        params.put(&quot;x-dead-letter-exchange&quot;, MqType.REGISTER_EXCHANGE_NAME);
+        // x-dead-letter-routing-key 声明了这些死信在转发时携带的 routing-key 名称。
+        params.put(&quot;x-dead-letter-routing-key&quot;, MqType.ROUTING_KEY);
+        return new Queue(MqType.REGISTER_DELAY_QUEUE, true, false, false, params);
+    }
+
+    /**
+     * 需要将一个队列绑定到交换机上，要求该消息与一个特定的路由键完全匹配。
+     * 这是一个完整的匹配。如果一个队列绑定到该交换机上要求路由键 “dog”，则只有被标记为“dog”的消息才被转发，不会转发dog.puppy，也不会转发dog.guard，只会转发dog。
+     * TODO 它不像 TopicExchange 那样可以使用通配符适配多个
+     *
+     * @return DirectExchange
+     */
+    @Bean
+    public DirectExchange delayExchange() {
+        return new DirectExchange(MqType.REGISTER_DELAY_EXCHANGE);
+    }
+
+    @Bean
+    public Binding dlxBinding() {
+        return BindingBuilder.bind(delayProcessQueue()).to(delayExchange()).with(MqType.DELAY_ROUTING_KEY);
+    }
+
+
+    @Bean
+    public Queue registerOrderQueue() {
+        return new Queue(MqType.REGISTER_QUEUE_NAME, true);
+    }
+
+    /**
+     * 将路由键和某模式进行匹配。此时队列需要绑定要一个模式上。
+     * 符号“#”匹配一个或多个词，符号“*”匹配不多不少一个词。因此“audit.#”能够匹配到“audit.irs.corporate”，但是“audit.*” 只会匹配到“audit.irs”。
+     **/
+    @Bean
+    public TopicExchange registerOrderTopicExchange() {
+        return new TopicExchange(MqType.REGISTER_EXCHANGE_NAME);
+    }
+
+    @Bean
+    public Binding registerBookBinding() {
+        // TODO 如果要让延迟队列之间有关联,这里的 routingKey 和 绑定的交换机很关键
+        return BindingBuilder.bind(registerOrderQueue()).to(registerOrderTopicExchange()).with(MqType.ROUTING_KEY);
+    }
+
+}
+</code></pre>
+<pre><code class="java">package com.example.consumer.mq;
+
+import com.example.common.cons.MqType;
+import com.example.common.model.Order;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.RabbitHandler;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.stereotype.Component;
+import com.rabbitmq.client.Channel;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+/**
+ * @Author jiangyong
+ * @Description TODO
+ * @Date 2018/6/14 12:59
+ **/
+@Slf4j
+@Component
+public class OrderMqListen {
+
+    @RabbitListener(queues = {MqType.ORDER_QUEUE})
+    public void process(Order order, Message message, Channel channel) {
+        try {
+            long deliveryTag = message.getMessageProperties().getDeliveryTag();
+            // TODO 通知 MQ 消息已被成功消费,可以ACK了
+            channel.basicAck(deliveryTag, false);
+            log.info(&quot;receive message:{}&quot;, order);
+        } catch (Exception e) {
+            try {
+                // TODO 处理失败,重新压入MQ
+                channel.basicRecover();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
+
+    }
+
+    @RabbitListener(queues = {MqType.REGISTER_QUEUE_NAME})
+    public void delayProcess(Order order, Message message, Channel channel) {
+        log.info(&quot;order:{}&quot;, order);
+        log.info(&quot;接收时间为:{}&quot;, LocalDateTime.now().format(DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm:ss&quot;)));
+        try {
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        } catch (IOException e) {
+            //TODO 失败处理
+        }
+    }
+}
+</code></pre>
+</div><div class="post-copyright"><blockquote><p>原文作者: mjy</p><p>原文链接: <a href="http://blog.moujiangyong.com/2018/11/01/消息队列-rabbitMQ/">http://blog.moujiangyong.com/2018/11/01/消息队列-rabbitMQ/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2019/03/01/spring-cloud之eureka/" class="pre">spring-cloud之eureka</a><a href="/2018/10/12/Docker/" class="next">docker的安装使用</a></div><div id="comments"></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#一-环境安装"><span class="toc-text">一.环境安装</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二-Exchange说明"><span class="toc-text">二.Exchange说明</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#一-DirectExchange"><span class="toc-text">一.DirectExchange</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#二-Fanout-Exchange"><span class="toc-text">二.Fanout Exchange</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#三-Topic-Exchange"><span class="toc-text">三.Topic Exchange</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三springboot整合"><span class="toc-text">三springboot整合</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#一-导入依赖"><span class="toc-text">一.导入依赖</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#二-配置文件"><span class="toc-text">二.配置文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#三-消息生产者"><span class="toc-text">三.消息生产者</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#四-消息消费者"><span class="toc-text">四.消息消费者</span></a></li></ol></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/09/21/JVM 配置常用参数和常用 GC 调优策略(转)/">jvm常用配置(转)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/01/开源项目/">开源项目</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/07/02/Linux安装环境/">Linux安装环境</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/17/String/">String.format()方法的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/30/常用递归的使用/">常用递归的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/23/feign和restTemplate的使用/">okhttp,feign,restTemplate的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/21/Java虚拟机调优/">Java虚拟机调优</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/logback的使用/">springboot-logback的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/21/spring-cloud之权限/">spring-cloud之权限</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/01/spring-cloud之链路追踪/">spring-cloud之链路追踪</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JVM/">JVM</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/http请求/">http请求</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/java8/">java8</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springboot/">springboot</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springcloud/">springcloud</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/前端/">前端</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客/">博客</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/搜索引擎/">搜索引擎</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/笔记/">笔记</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/线程/">线程</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/递归/">递归</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/项目/">项目</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/spring-cloud/" style="font-size: 15px;">spring cloud</a> <a href="/tags/资料/" style="font-size: 15px;">资料</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li></ul></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/baidusitemap.xml">网站地图</a> |  <a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><a href="https://beian.miit.gov.cn " rel="nofollow">蜀ICP备19003737号</a></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>

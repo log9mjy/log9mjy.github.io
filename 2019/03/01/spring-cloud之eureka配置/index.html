@@ -1,0 +1,287 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="jiangyong's blog."><meta name="keywords" content="学习,记录,笔记"><title>spring-cloud之eureka配置 | 听雨时的忧愁</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">spring-cloud之eureka配置</h1><a id="logo" href="/.">听雨时的忧愁</a><p class="description">天下武功,唯快不破</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><div id="search-result"></div></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">spring-cloud之eureka配置</h1><div class="post-meta"><a href="/2019/03/01/spring-cloud之eureka配置/#comments" class="comment-count"></a><p><span class="date">Mar 01, 2019</span><span><a href="/categories/springcloud/" class="category">springcloud</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><h2 id="SpringCloud-Eureka参数配置项详解（转）"><a href="#SpringCloud-Eureka参数配置项详解（转）" class="headerlink" title="SpringCloud Eureka参数配置项详解（转）"></a><a href="https://www.cnblogs.com/chry/p/7992885.html" target="_blank" rel="noopener">SpringCloud Eureka参数配置项详解（转）</a></h2><p>Eureka涉及到的参数配置项数量众多，它的很多功能都是通过参数配置来实现的，了解这些参数的含义有助于我们更好的应用Eureka的各种功能，下面对Eureka的配置项做具体介绍，供大家参考。</p>
+<p>​      <strong>Eureka客户端配置</strong></p>
+<p>​      1、RegistryFetchIntervalSeconds</p>
+<p>​      从eureka服务器注册表中获取注册信息的时间间隔（s），默认为30秒</p>
+<p>​      2、InstanceInfoReplicationIntervalSeconds</p>
+<p>​      复制实例变化信息到eureka服务器所需要的时间间隔（s），默认为30秒</p>
+<p>​      3、InitialInstanceInfoReplicationIntervalSeconds</p>
+<p>​      最初复制实例信息到eureka服务器所需的时间（s），默认为40秒</p>
+<p>​      4、EurekaServiceUrlPollIntervalSeconds</p>
+<p>​      询问Eureka服务url信息变化的时间间隔（s），默认为300秒</p>
+<p>​      5、ProxyHost</p>
+<p>​      获取eureka服务的代理主机，默认为null</p>
+<p>​      6、ProxyProxyPort</p>
+<p>​      获取eureka服务的代理端口, 默认为null </p>
+<p>​       7、ProxyUserName</p>
+<p>​      获取eureka服务的代理用户名，默认为null</p>
+<p>​       8、ProxyPassword</p>
+<p>​      获取eureka服务的代理密码，默认为null </p>
+<p>​       9、GZipContent</p>
+<p>​       eureka注册表的内容是否被压缩，默认为true，并且是在最好的网络流量下被压缩</p>
+<p>​      10、EurekaServerReadTimeoutSeconds</p>
+<p>​      eureka需要超时读取之前需要等待的时间，默认为8秒</p>
+<p>​      11、EurekaServerConnectTimeoutSeconds</p>
+<p>​      eureka需要超时连接之前需要等待的时间，默认为5秒</p>
+<p>​      12、BackupRegistryImpl</p>
+<p>​      获取实现了eureka客户端在第一次启动时读取注册表的信息作为回退选项的实现名称</p>
+<p>​      13、EurekaServerTotalConnections</p>
+<p>​       eureka客户端允许所有eureka服务器连接的总数目，默认是200</p>
+<p>​       14、EurekaServerTotalConnectionsPerHost</p>
+<p>​       eureka客户端允许eureka服务器主机连接的总数目，默认是50</p>
+<p>​       15、EurekaServerURLContext</p>
+<p>​       表示eureka注册中心的路径，如果配置为eureka，则为<a href="http://x.x.x.x:x/eureka/，在eureka的配置文件中加入此配置表示eureka作为客户端向注册中心注册，从而构成eureka集群。此配置只有在eureka服务器ip地址列表是在DNS中才会用到，默认为null" target="_blank" rel="noopener">http://x.x.x.x:x/eureka/，在eureka的配置文件中加入此配置表示eureka作为客户端向注册中心注册，从而构成eureka集群。此配置只有在eureka服务器ip地址列表是在DNS中才会用到，默认为null</a></p>
+<p>​       16、EurekaServerPort</p>
+<p>​       获取eureka服务器的端口，此配置只有在eureka服务器ip地址列表是在DNS中才会用到。默认为null</p>
+<p>​       17、EurekaServerDNSName</p>
+<p>​       获取要查询的DNS名称来获得eureka服务器，此配置只有在eureka服务器ip地址列表是在DNS中才会用到。默认为null</p>
+<p>​       18、UseDnsForFetchingServiceUrls</p>
+<p>​       eureka客户端是否应该使用DNS机制来获取eureka服务器的地址列表，默认为false</p>
+<p>​       19、RegisterWithEureka</p>
+<p>​       实例是否在eureka服务器上注册自己的信息以供其他服务发现，默认为true</p>
+<p>​       20、PreferSameZoneEureka</p>
+<p>​       实例是否使用同一zone里的eureka服务器，默认为true，理想状态下，eureka客户端与服务端是在同一zone下</p>
+<p>​       21、AllowRedirects</p>
+<p>​       服务器是否能够重定向客户端请求到备份服务器。 如果设置为false，服务器将直接处理请求，如果设置为true，它可能发送HTTP重定向到客户端。默认为false</p>
+<p>​       22、LogDeltaDiff</p>
+<p>​       是否记录eureka服务器和客户端之间在注册表的信息方面的差异，默认为false</p>
+<p>​       23、DisableDelta(*)</p>
+<p>​       默认为false</p>
+<p>​       24、fetchRegistryForRemoteRegions</p>
+<p>​       eureka服务注册表信息里的以逗号隔开的地区名单，如果不这样返回这些地区名单，则客户端启动将会出错。默认为null</p>
+<p>​       25、Region</p>
+<p>​       获取实例所在的地区。默认为us-east-1</p>
+<p>​       26、AvailabilityZones</p>
+<p>​       获取实例所在的地区下可用性的区域列表，用逗号隔开。</p>
+<p>​       27、EurekaServerServiceUrls</p>
+<p>​       Eureka服务器的连接，默认为http：//XXXX：X/eureka/,但是如果采用DNS方式获取服务地址，则不需要配置此设置。</p>
+<p>​       28、FilterOnlyUpInstances（*）</p>
+<p>​       是否获得处于开启状态的实例的应用程序过滤之后的应用程序。默认为true</p>
+<p>​       29、EurekaConnectionIdleTimeoutSeconds</p>
+<p>​       Eureka服务的http请求关闭之前其响应的时间，默认为30 秒</p>
+<p>​       30、FetchRegistry</p>
+<p>​       此客户端是否获取eureka服务器注册表上的注册信息，默认为true</p>
+<p>​       31、RegistryRefreshSingleVipAddress</p>
+<p>​       此客户端只对一个单一的VIP注册表的信息感兴趣。默认为null</p>
+<p>​       32、HeartbeatExecutorThreadPoolSize(*)</p>
+<p>​       心跳执行程序线程池的大小,默认为5</p>
+<p>​       33、HeartbeatExecutorExponentialBackOffBound(*)</p>
+<p>​       心跳执行程序回退相关的属性，是重试延迟的最大倍数值，默认为10</p>
+<p>​       34、CacheRefreshExecutorThreadPoolSize(*)</p>
+<p>​       执行程序缓存刷新线程池的大小，默认为5</p>
+<p>​       35、CacheRefreshExecutorExponentialBackOffBound</p>
+<p>​       执行程序指数回退刷新的相关属性，是重试延迟的最大倍数值，默认为10</p>
+<p>​       36、DollarReplacement</p>
+<p>​       eureka服务器序列化/反序列化的信息中获取“$”符号的的替换字符串。默认为“_-”</p>
+<p>​       37、EscapeCharReplacement</p>
+<p>​       eureka服务器序列化/反序列化的信息中获取“_”符号的的替换字符串。默认为“__”</p>
+<p>​       38、OnDemandUpdateStatusChange（*）</p>
+<p>​       如果设置为true,客户端的状态更新将会点播更新到远程服务器上，默认为true</p>
+<p>​       39、EncoderName</p>
+<p>​       这是一个短暂的编码器的配置，如果最新的编码器是稳定的，则可以去除，默认为null</p>
+<p>​       40、DecoderName</p>
+<p>​       这是一个短暂的解码器的配置，如果最新的解码器是稳定的，则可以去除，默认为null</p>
+<p>​       41、ClientDataAccept（*）</p>
+<p>​       客户端数据接收</p>
+<p>​       42、Experimental（*）</p>
+<p>​       当尝试新功能迁移过程时，为了避免配置API污染，相应的配置即可投入实验配置部分，默认为null</p>
+<p>​       <strong>实例微服务端配置</strong></p>
+<p>​       1、InstanceId</p>
+<p>​       此实例注册到eureka服务端的唯一的实例ID,其组成为spring.application.name:spring.application.name:{spring.application.instance_id:${random.value}}</p>
+<p>​       2、Appname</p>
+<p>​       获得在eureka服务上注册的应用程序的名字，默认为unknow</p>
+<p>​       3、AppGroupName</p>
+<p>​       获得在eureka服务上注册的应用程序组的名字，默认为unknow</p>
+<p>​       4、InstanceEnabledOnit（*）</p>
+<p>​       实例注册到eureka服务器时，是否开启通讯，默认为false</p>
+<p>​       5、NonSecurePort</p>
+<p>​       获取该实例应该接收通信的非安全端口。默认为80</p>
+<p>​       6、SecurePort</p>
+<p>​       获取该实例应该接收通信的安全端口，默认为443</p>
+<p>​       7、NonSecurePortEnabled</p>
+<p>​       该实例应该接收通信的非安全端口是否启用，默认为true</p>
+<p>​       8、SecurePortEnabled</p>
+<p>​       该实例应该接收通信的安全端口是否启用，默认为false</p>
+<p>​       9、LeaseRenewalIntervalInSeconds</p>
+<p>​       eureka客户需要多长时间发送心跳给eureka服务器，表明它仍然活着,默认为30 秒</p>
+<p>​       10、LeaseExpirationDurationInSeconds</p>
+<p>​       Eureka服务器在接收到实例的最后一次发出的心跳后，需要等待多久才可以将此实例删除，默认为90秒</p>
+<p>​       11、VirtualHostName</p>
+<p>​       此实例定义的虚拟主机名，其他实例将通过使用虚拟主机名找到该实例。</p>
+<p>​       12、SecureVirtualHostName</p>
+<p>​       此实例定义的安全虚拟主机名</p>
+<p>​       13、ASGName（*）</p>
+<p>​       与此实例相关联 AWS自动缩放组名称。此项配置是在AWS环境专门使用的实例启动，它已被用于流量停用后自动把一个实例退出服务。</p>
+<p>​       14、HostName</p>
+<p>​       与此实例相关联的主机名，是其他实例可以用来进行请求的准确名称</p>
+<p>​       15、MetadataMap(*)</p>
+<p>​       获取与此实例相关联的元数据(key,value)。这个信息被发送到eureka服务器，其他实例可以使用。</p>
+<p>​       16、DataCenterInfo（*）</p>
+<p>​       该实例被部署在数据中心</p>
+<p>​       17、IpAddress</p>
+<p>​       获取实例的ip地址</p>
+<p>​       18、StatusPageUrlPath（*）</p>
+<p>​       获取此实例状态页的URL路径，然后构造出主机名，安全端口等，默认为/info</p>
+<p>​       19、StatusPageUrl(*)</p>
+<p>​       获取此实例绝对状态页的URL路径，为其他服务提供信息时来找到这个实例的状态的路径，默认为null</p>
+<p>​       20、HomePageUrlPath（*）</p>
+<p>​       获取此实例的相关主页URL路径，然后构造出主机名，安全端口等，默认为/</p>
+<p>​       21、HomePageUrl(*)</p>
+<p>​       获取此实例的绝对主页URL路径，为其他服务提供信息时使用的路径,默认为null</p>
+<p>​       22、HealthCheckUrlPath</p>
+<p>​       获取此实例的相对健康检查URL路径，默认为/health</p>
+<p>​       23、HealthCheckUrl</p>
+<p>​       获取此实例的绝对健康检查URL路径,默认为null</p>
+<p>​       24、SecureHealthCheckUrl</p>
+<p>​       获取此实例的绝对安全健康检查网页的URL路径，默认为null</p>
+<p>​       25、DefaultAddressResolutionOrder</p>
+<p>​       获取实例的网络地址，默认为[]</p>
+<p>​       26、Namespace</p>
+<p>​       获取用于查找属性的命名空间，默认为eureka</p>
+<p>​       <strong>Eureka服务端配置</strong></p>
+<p>​       1、AWSAccessId</p>
+<p>​       获取aws访问的id，主要用于弹性ip绑定，此配置是用于aws上的，默认为null</p>
+<p>​       2、AWSSecretKey</p>
+<p>​       获取aws私有秘钥，主要用于弹性ip绑定，此配置是用于aws上的，默认为null</p>
+<p>​       3、EIPBindRebindRetries</p>
+<p>​       获取服务器尝试绑定到候选的EIP的次数，默认为3</p>
+<p>​       4、EIPBindingRetryIntervalMsWhenUnbound(*)</p>
+<p>​       服务器检查ip绑定的时间间隔，单位为毫秒，默认为1 <em> 60 </em> 1000</p>
+<p>​       5、EIPBindingRetryIntervalMs</p>
+<p>​       与上面的是同一作用，仅仅是稳定状态检查，默认为5 <em> 60 </em> 1000</p>
+<p>​       6、EnableSelfPreservation</p>
+<p>​       自我保护模式，当出现出现网络分区、eureka在短时间内丢失过多客户端时，会进入自我保护模式，即一个服务长时间没有发送心跳，eureka也不会将其删除，默认为true</p>
+<p>​       7、RenewalPercentThreshold(*)</p>
+<p>​       <img src="https://images2015.cnblogs.com/blog/952935/201706/952935-20170623150643570-1733575926.png" alt="img"></p>
+<p>​       阈值因子，默认是0.85，如果阈值比最小值大，则自我保护模式开启</p>
+<p>​       8、RenewalThresholdUpdateIntervalMs</p>
+<p>​       阈值更新的时间间隔，单位为毫秒，默认为15 <em> 60 </em> 1000</p>
+<p>​       9、PeerEurekaNodesUpdateIntervalMs(*)</p>
+<p>​       集群里eureka节点的变化信息更新的时间间隔，单位为毫秒，默认为10 <em> 60 </em> 1000</p>
+<p>​       10、EnableReplicatedRequestCompression</p>
+<p>​       复制的数据在发送请求时是否被压缩，默认为false</p>
+<p>​       11、NumberOfReplicationRetries</p>
+<p>​       获取集群里服务器尝试复制数据的次数，默认为5</p>
+<p>​       12、PeerEurekaStatusRefreshTimeIntervalMs</p>
+<p>​       服务器节点的状态信息被更新的时间间隔，单位为毫秒，默认为30 * 1000</p>
+<p>​       13、WaitTimeInMsWhenSyncEmpty(*)</p>
+<p>​       在Eureka服务器获取不到集群里对等服务器上的实例时，需要等待的时间，单位为毫秒，默认为1000 <em> 60 </em> 5</p>
+<p>​       14、PeerNodeConnectTimeoutMs</p>
+<p>​       连接对等节点服务器复制的超时的时间，单位为毫秒，默认为200</p>
+<p>​       15、PeerNodeReadTimeoutMs</p>
+<p>​       读取对等节点服务器复制的超时的时间，单位为毫秒，默认为200</p>
+<p>​       16、PeerNodeTotalConnections</p>
+<p>​       获取对等节点上http连接的总数，默认为1000</p>
+<p>​       17、PeerNodeTotalConnectionsPerHost(*)</p>
+<p>​       获取特定的对等节点上http连接的总数，默认为500</p>
+<p>​       18、PeerNodeConnectionIdleTimeoutSeconds(*)</p>
+<p>​       http连接被清理之后服务器的空闲时间，默认为30秒</p>
+<p>​       19、RetentionTimeInMSInDeltaQueue(*)</p>
+<p>​       客户端保持增量信息缓存的时间，从而保证不会丢失这些信息，单位为毫秒，默认为3 <em> 60 </em> 1000</p>
+<p>​       20、DeltaRetentionTimerIntervalInMs</p>
+<p>​       清理任务程序被唤醒的时间间隔，清理过期的增量信息，单位为毫秒，默认为30 * 1000</p>
+<p>​       21、EvictionIntervalTimerInMs</p>
+<p>​       过期实例应该启动并运行的时间间隔，单位为毫秒，默认为60 * 1000</p>
+<p>​       22、ASGQueryTimeoutMs（*）</p>
+<p>​       查询AWS上ASG（自动缩放组）信息的超时值，单位为毫秒，默认为300</p>
+<p>​       23、ASGUpdateIntervalMs</p>
+<p>​       从AWS上更新ASG信息的时间间隔，单位为毫秒，默认为5 <em> 60 </em> 1000</p>
+<p>​       24、ASGCacheExpiryTimeoutMs(*)</p>
+<p>​       缓存ASG信息的到期时间，单位为毫秒，默认为10 <em> 60 </em> 1000</p>
+<p>​       25、ResponseCacheAutoExpirationInSeconds（*）</p>
+<p>​       当注册表信息被改变时，则其被保存在缓存中不失效的时间，默认为180秒</p>
+<p>​       26、ResponseCacheUpdateIntervalMs（*）</p>
+<p>​       客户端的有效负载缓存应该更新的时间间隔，默认为30 * 1000毫秒</p>
+<p>​       27、UseReadOnlyResponseCache（*）</p>
+<p>​       目前采用的是二级缓存策略，一个是读写高速缓存过期策略，另一个没有过期只有只读缓存，默认为true，表示只读缓存</p>
+<p>​       28、DisableDelta（*）</p>
+<p>​       增量信息是否可以提供给客户端看，默认为false</p>
+<p>​       29、MaxIdleThreadInMinutesAgeForStatusReplication（*）</p>
+<p>​       状态复制线程可以保持存活的空闲时间，默认为10分钟</p>
+<p>​       30、MinThreadsForStatusReplication</p>
+<p>​       被用于状态复制的线程的最小数目，默认为1</p>
+<p>​       31、MaxThreadsForStatusReplication</p>
+<p>​       被用于状态复制的线程的最大数目，默认为1</p>
+<p>​       32、MaxElementsInStatusReplicationPool</p>
+<p>​       可允许的状态复制池备份复制事件的最大数量，默认为10000</p>
+<p>​       33、SyncWhenTimestampDiffers</p>
+<p>​       当时间变化实例是否跟着同步，默认为true</p>
+<p>​       34、RegistrySyncRetries</p>
+<p>​       当eureka服务器启动时尝试去获取集群里其他服务器上的注册信息的次数，默认为5</p>
+<p>​       35、RegistrySyncRetryWaitMs</p>
+<p>​       当eureka服务器启动时获取其他服务器的注册信息失败时，会再次尝试获取，期间需要等待的时间，默认为30 * 1000毫秒</p>
+<p>​       36、MaxElementsInPeerReplicationPool（*）</p>
+<p>​       复制池备份复制事件的最大数量，默认为10000</p>
+<p>​       37、MaxIdleThreadAgeInMinutesForPeerReplication（*）</p>
+<p>​       复制线程可以保持存活的空闲时间，默认为15分钟</p>
+<p>​       38、MinThreadsForPeerReplication（*）</p>
+<p>​       获取将被用于复制线程的最小数目，默认为5</p>
+<p>​       39、MaxThreadsForPeerReplication</p>
+<p>​       获取将被用于复制线程的最大数目，默认为20</p>
+<p>​       40、MaxTimeForReplication（*）</p>
+<p>​       尝试在丢弃复制事件之前进行复制的时间，默认为30000毫秒</p>
+<p>​       41、PrimeAwsReplicaConnections（*）</p>
+<p>​       对集群中服务器节点的连接是否应该准备，默认为true</p>
+<p>​       42、DisableDeltaForRemoteRegions（*）</p>
+<p>​       增量信息是否可以提供给客户端或一些远程地区，默认为false</p>
+<p>​       43、RemoteRegionConnectTimeoutMs（*）</p>
+<p>​       连接到对等远程地eureka节点的超时时间，默认为1000毫秒</p>
+<p>​       44、RemoteRegionReadTimeoutMs（*）</p>
+<p>​       获取从远程地区eureka节点读取信息的超时时间，默认为1000毫秒</p>
+<p>​       45、RemoteRegionTotalConnections</p>
+<p>​       获取远程地区对等节点上http连接的总数，默认为1000</p>
+<p>​       46、RemoteRegionTotalConnectionsPerHost</p>
+<p>​       获取远程地区特定的对等节点上http连接的总数，默认为500</p>
+<p>​       47、RemoteRegionConnectionIdleTimeoutSeconds</p>
+<p>​       http连接被清理之后远程地区服务器的空闲时间，默认为30秒</p>
+<p>​       48、GZipContentFromRemoteRegion（*）</p>
+<p>​       eureka服务器中获取的内容是否在远程地区被压缩，默认为true</p>
+<p>​       49、RemoteRegionUrlsWithName</p>
+<p>​       针对远程地区发现的网址域名的map</p>
+<p>​       50、RemoteRegionUrls</p>
+<p>​       远程地区的URL列表</p>
+<p>​       51、RemoteRegionAppWhitelist（*）</p>
+<p>​       必须通过远程区域中检索的应用程序的列表</p>
+<p>​       52、RemoteRegionRegistryFetchInterval</p>
+<p>​       从远程区域取出该注册表的信息的时间间隔，默认为30秒</p>
+<p>​       53、RemoteRegionFetchThreadPoolSize</p>
+<p>​       用于执行远程区域注册表请求的线程池的大小，默认为20</p>
+<p>​       54、RemoteRegionTrustStore</p>
+<p>​       用来合格请求远程区域注册表的信任存储文件，默认为空</p>
+<p>​       55、RemoteRegionTrustStorePassword</p>
+<p>​       获取偏远地区信任存储文件的密码，默认为“changeit”</p>
+<p>​       56、disableTransparentFallbackToOtherRegion(*)</p>
+<p>​       如果在远程区域本地没有实例运行，对于应用程序回退的旧行为是否被禁用， 默认为false</p>
+<p>​       57、BatchReplication(*)</p>
+<p>​       表示集群节点之间的复制是否为了网络效率而进行批处理，默认为false</p>
+<p>​       58、LogIdentityHeaders(*)</p>
+<p>​       Eureka服务器是否应该登录clientAuthHeaders，默认为true</p>
+<p>​       59、RateLimiterEnabled</p>
+<p>​       限流是否应启用或禁用，默认为false</p>
+<p>​       60、RateLimiterThrottleStandardClients</p>
+<p>​       是否对标准客户端进行限流，默认false</p>
+<p>​       61、RateLimiterPrivilegedClients（*）</p>
+<p>​       认证的客户端列表，这里是除了标准的eureka Java客户端。</p>
+<p>​       62、RateLimiterBurstSize（*）</p>
+<p>​       速率限制的burst size ，默认为10，这里用的是令牌桶算法</p>
+<p>​       63、RateLimiterRegistryFetchAverageRate(*)</p>
+<p>​       速率限制器用的是令牌桶算法，此配置指定平均执行注册请求速率，默认为500</p>
+<p>​       64、RateLimiterFullFetchAverageRate（*）</p>
+<p>​       速率限制器用的是令牌桶算法，此配置指定平均执行请求速率，默认为100</p>
+<p>​       65、ListAutoScalingGroupsRoleName（*）</p>
+<p>​       用来描述从AWS第三账户的自动缩放组中的角色名称，默认为“ListAutoScalingGroups”</p>
+<p>​       66、JsonCodecName（*）</p>
+<p>​       如果没有设置默认的编解码器将使用全JSON编解码器，获取的是编码器的类名称</p>
+<p>​       67、XmlCodecName(*)</p>
+<p>​       如果没有设置默认的编解码器将使用xml编解码器，获取的是编码器的类名称</p>
+<p>​       68、BindingStrategy(*)</p>
+<p>​       获取配置绑定EIP或Route53的策略。</p>
+<p>​       69、Route53DomainTTL（*）</p>
+<p>​       用于建立route53域的ttl，默认为301</p>
+<p>​       70、Route53BindRebindRetries（*）</p>
+<p>​       服务器尝试绑定到候选Route53域的次数，默认为3</p>
+<p>​       71、Route53BindingRetryIntervalMs（*）</p>
+<p>​       服务器应该检查是否和Route53域绑定的时间间隔，默认为5 <em> 60 </em> 1000毫秒</p>
+<p>​       72、Experimental(*)</p>
+<p>​       当尝试新功能迁移过程时，为了避免配置API污染，相应的配置即可投入实验配置部分，默认为null</p>
+<p>​       以上是Eureka配置项的详细说明，分为Eureka客户端配置、Eureka服务端配置和微服务端配置，一共100多项，其中有很多配置参数并不需要我们去修改，使用默认的就好，有些跟我们业务相关的配置参数可根据需要自行设置。</p>
+</div><div class="post-copyright"><blockquote><p>原文作者: mjy</p><p>原文链接: <a href="http://blog.moujiangyong.com/2019/03/01/spring-cloud之eureka配置/">http://blog.moujiangyong.com/2019/03/01/spring-cloud之eureka配置/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2019/03/05/Eureka 工作原理/" class="pre">spring-cloud之eureka原理</a><a href="/2019/03/01/spring-cloud之eureka/" class="next">spring-cloud之eureka</a></div><div id="comments"></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#SpringCloud-Eureka参数配置项详解（转）"><span class="toc-text">SpringCloud Eureka参数配置项详解（转）</span></a></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/09/21/JVM 配置常用参数和常用 GC 调优策略(转)/">jvm常用配置(转)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/01/开源项目/">开源项目</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/07/02/Linux安装环境/">Linux安装环境</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/17/String/">String.format()方法的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/30/常用递归的使用/">常用递归的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/23/feign和restTemplate的使用/">okhttp,feign,restTemplate的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/21/Java虚拟机调优/">Java虚拟机调优</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/logback的使用/">springboot-logback的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/21/spring-cloud之权限/">spring-cloud之权限</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/01/spring-cloud之链路追踪/">spring-cloud之链路追踪</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JVM/">JVM</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/http请求/">http请求</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/java8/">java8</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springboot/">springboot</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springcloud/">springcloud</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/前端/">前端</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客/">博客</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/搜索引擎/">搜索引擎</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/笔记/">笔记</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/线程/">线程</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/递归/">递归</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/项目/">项目</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/spring-cloud/" style="font-size: 15px;">spring cloud</a> <a href="/tags/资料/" style="font-size: 15px;">资料</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li></ul></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/baidusitemap.xml">网站地图</a> |  <a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><a href="https://beian.miit.gov.cn " rel="nofollow">蜀ICP备19003737号</a></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>

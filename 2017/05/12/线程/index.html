@@ -1,0 +1,663 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="jiangyong's blog."><meta name="keywords" content="学习,记录,笔记"><title>线程的总结 | 听雨时的忧愁</title><link rel="stylesheet" type="text/css" href="//fonts.loli.net/css?family=Source+Code+Pro"><link rel="stylesheet" type="text/css" href="/css/style.css?v=2.0.3"><link rel="stylesheet" type="text/css" href="/css/highlight.css?v=2.0.3"><link rel="Shortcut Icon" href="/favicon.ico"><link rel="bookmark" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">线程的总结</h1><a id="logo" href="/.">听雨时的忧愁</a><p class="description">天下武功,唯快不破</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div><div id="search-form"><div id="result-mask" class="hide"></div><label><input id="search-key" type="text" autocomplete="off" placeholder="搜索"></label><div id="result-wrap" class="hide"><div id="search-result"></div></div><div class="hide"><template id="search-tpl"><div class="item"><a href="/{path}" title="{title}"><div class="title">{title}</div><div class="time">{date}</div><div class="tags">{tags}</div></a></div></template></div></div></div><div id="layout" class="layout-g"><div class="layout-l"><div class="content_container"><div class="post"><h1 class="post-title">线程的总结</h1><div class="post-meta"><a href="/2017/05/12/线程/#comments" class="comment-count"></a><p><span class="date">May 12, 2017</span><span><a href="/categories/线程/" class="category">线程</a></span><span><i id="busuanzi_container_page_pv"><i id="busuanzi_value_page_pv"></i><i>点击</i></i></span></p></div><div class="post-content"><h4 id="一-JAVA内存模型"><a href="#一-JAVA内存模型" class="headerlink" title="一  .JAVA内存模型"></a>一  .JAVA内存模型</h4><p><strong>1.原子性</strong></p>
+<p>　　在Java中，对基本数据类型的变量的读取和赋值操作是原子性操作，即这些操作是不可被中断的，要么执行，要么不执行。</p>
+<p>　　上面一句话虽然看起来简单，但是理解起来并不是那么容易。看下面一个例子i：</p>
+<p>　　请分析以下哪些操作是原子性操作：</p>
+<pre><code class="java">`x = ``10``;         ``//语句1``y = x;         ``//语句2``x++;           ``//语句3``x = x + ``1``;     ``//语句4`
+</code></pre>
+<p> 　　咋一看，有些朋友可能会说上面的4个语句中的操作都是原子性操作。其实只有语句1是原子性操作，其他三个语句都不是原子性操作。</p>
+<p>　　语句1是直接将数值10赋值给x，也就是说线程执行这个语句的会直接将数值10写入到工作内存中。</p>
+<p>　　语句2实际上包含2个操作，它先要去读取x的值，再将x的值写入工作内存，虽然读取x的值以及 将x的值写入工作内存 这2个操作都是原子性操作，但是合起来就不是原子性操作了。</p>
+<p>　　同样的，x++和 x = x+1包括3个操作：读取x的值，进行加1操作，写入新的值。</p>
+<p> 　　所以上面4个语句只有语句1的操作具备原子性。</p>
+<p>　　也就是说，只有简单的读取、赋值（而且必须是将数字赋值给某个变量，变量之间的相互赋值不是原子操作）才是原子操作。</p>
+<p>　　不过这里有一点需要注意：在32位平台下，对64位数据的读取和赋值是需要通过两个操作来完成的，不能保证其原子性。但是好像在最新的JDK中，JVM已经保证对64位数据的读取和赋值也是原子性操作了。</p>
+<p>　　从上面可以看出，Java内存模型只保证了基本读取和赋值是原子性操作，如果要实现更大范围操作的原子性，可以通过synchronized和Lock来实现。由于synchronized和Lock能够保证任一时刻只有一个线程执行该代码块，那么自然就不存在原子性问题了，从而保证了原子性。</p>
+<p><strong>2.可见性</strong></p>
+<p>　　对于可见性，Java提供了volatile关键字来保证可见性。</p>
+<p>　　当一个共享变量被volatile修饰时，它会保证修改的值会立即被更新到主存，当有其他线程需要读取时，它会去内存中读取新值。</p>
+<p>　　而普通的共享变量不能保证可见性，因为普通共享变量被修改之后，什么时候被写入主存是不确定的，当其他线程去读取时，此时内存中可能还是原来的旧值，因此无法保证可见性。</p>
+<p>　　另外，通过synchronized和Lock也能够保证可见性，synchronized和Lock能保证同一时刻只有一个线程获取锁然后执行同步代码，并且在释放锁之前会将对变量的修改刷新到主存当中。因此可以保证可见性。</p>
+<p><strong>3.有序性</strong></p>
+<p>　　在Java内存模型中，允许编译器和处理器对指令进行重排序，但是重排序过程不会影响到单线程程序的执行，却会影响到多线程并发执行的正确性。</p>
+<p>　　在Java里面，可以通过volatile关键字来保证一定的“有序性”（具体原理在下一节讲述）。另外可以通过synchronized和Lock来保证有序性，很显然，synchronized和Lock保证每个时刻是有一个线程执行同步代码，相当于是让线程顺序执行同步代码，自然就保证了有序性。</p>
+<p>　　另外，Java内存模型具备一些先天的“有序性”，即不需要通过任何手段就能够得到保证的有序性，这个通常也称为 happens-before 原则。如果两个操作的执行次序无法从happens-before原则推导出来，那么它们就不能保证它们的有序性，虚拟机可以随意地对它们进行重排序。</p>
+<p>　　下面就来具体介绍下happens-before原则（先行发生原则）：</p>
+<ul>
+<li><p>程序次序规则：一个线程内，按照代码顺序，书写在前面的操作先行发生于书写在后面的操作</p>
+</li>
+<li><p>锁定规则：一个unLock操作先行发生于后面对同一个锁额lock操作</p>
+</li>
+<li><p>volatile变量规则：对一个变量的写操作先行发生于后面对这个变量的读操作</p>
+</li>
+<li><p>传递规则：如果操作A先行发生于操作B，而操作B又先行发生于操作C，则可以得出操作A先行发生于操作C</p>
+</li>
+<li><p>线程启动规则：Thread对象的start()方法先行发生于此线程的每个一个动作</p>
+</li>
+<li><p>线程中断规则：对线程interrupt()方法的调用先行发生于被中断线程的代码检测到中断事件的发生</p>
+</li>
+<li><p>线程终结规则：线程中所有的操作都先行发生于线程的终止检测，我们可以通过Thread.join()方法结束、Thread.isAlive()的返回值手段检测到线程已经终止执行</p>
+</li>
+<li><p>对象终结规则：一个对象的初始化完成先行发生于他的finalize()方法的开始</p>
+</li>
+<li><p>下面我们来解释一下前4条规则：</p>
+<p>　　对于程序次序规则来说，我的理解就是一段程序代码的执行在单个线程中看起来是有序的。注意，虽然这条规则中提到“书写在前面的操作先行发生于书写在后面的操作”，这个应该是程序看起来执行的顺序是按照代码顺序执行的，因为虚拟机可能会对程序代码进行指令重排序。虽然进行重排序，但是最终执行的结果是与程序顺序执行的结果一致的，它只会对不存在数据依赖性的指令进行重排序。因此，在单个线程中，程序执行看起来是有序执行的，这一点要注意理解。事实上，这个规则是用来保证程序在单线程中执行结果的正确性，但无法保证程序在多线程中执行的正确性。</p>
+<p>  　　第二条规则也比较容易理解，也就是说无论在单线程中还是多线程中，同一个锁如果出于被锁定的状态，那么必须先对锁进行了释放操作，后面才能继续进行lock操作。</p>
+<p>  　　第三条规则是一条比较重要的规则，也是后文将要重点讲述的内容。直观地解释就是，如果一个线程先去写一个变量，然后一个线程去进行读取，那么写入操作肯定会先行发生于读操作。</p>
+<p>  　　第四条规则实际上就是体现happens-before原则具备传递性。</p>
+</li>
+</ul>
+<p>  但是用volatile修饰之后就变得不一样了：</p>
+<p>  　　第一：使用volatile关键字会强制将修改的值立即写入主存；</p>
+<p>  　　第二：使用volatile关键字的话，当线程2进行修改时，会导致线程1的工作内存中缓存变量stop的缓存行无效（反映到硬件层的话，就是CPU的L1或者L2缓存中对应的缓存行无效）；</p>
+<p>  　　第三：由于线程1的工作内存中缓存变量stop的缓存行无效，所以线程1再次读取变量stop的值时会去主存读取。</p>
+<p>  <strong>volatile关键字能保证可见性没有错，但是上面的程序错在没能保证原子性。可见性只能保证每次读取的是最新的值，但是volatile没办法保证对变量的操作的原子性。</strong></p>
+<h4 id="二-创建线程的两个方法"><a href="#二-创建线程的两个方法" class="headerlink" title="二 .创建线程的两个方法"></a>二 .创建线程的两个方法</h4><h5 id="创建类继承Thread"><a href="#创建类继承Thread" class="headerlink" title="创建类继承Thread"></a>创建类继承Thread</h5><pre><code class="java">线程一
+package com.moujiangyong;
+
+public class Thread1 extends Thread {
+
+    @Override
+    public void run() {
+        for(int i=0;i&lt;50;i++){
+            try {
+                sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println(this.getName()+&quot;----&quot;+i);
+        }
+    }
+}
+线程二
+package com.moujiangyong;
+
+public class Thread2 extends  Thread{
+    @Override
+    public void run() {
+        for(int i=0;i&lt;50;i++){
+            System.out.println(this.getName()+&quot;----&quot;+i);
+        }
+    }
+}
+调用
+    public static void main(String[] args) {
+        Thread4 thread1=new Thread4();
+        thread1.setName(&quot;线程一&quot;);
+        Thread5 thread2=new Thread5();
+        thread2.setName(&quot;线程二&quot;);
+        System.out.println(&quot;测试&quot;);
+        thread1.start();
+        thread2.start();
+    }
+</code></pre>
+<h5 id="创建类实现Runnable"><a href="#创建类实现Runnable" class="headerlink" title="创建类实现Runnable"></a>创建类实现Runnable</h5><pre><code class="java">创建类Thread3实现Runnable,实现Run方法
+Thread3 th = new Thread3();
+Thread thread1=new Thread(th);
+thread1.setName(&quot;窗口A&quot;);
+Thread thread2=new Thread(th);
+thread2.setName(&quot;窗口B&quot;);
+thread1.start();
+thread2.start();
+</code></pre>
+<h4 id="三-线程安全问题"><a href="#三-线程安全问题" class="headerlink" title="三 .线程安全问题"></a>三 .线程安全问题</h4><p>操作公共的数据,会存在安全问题</p>
+<pre><code>synchronized:用来修饰代码块或者方法
+</code></pre><pre><code>package com.moujiangyong;
+
+public class Thread3 implements Runnable {
+    private int id=10;
+    @Override
+    public void run() {
+        for(int i=0;i&lt;10;i++){
+           saleOne();
+        }
+    }
+    public synchronized void saleOne(){
+        if(id&gt;0){
+            System.out.println(Thread.currentThread().getName()+&quot;卖出编号为&quot;+id+&quot;的票&quot;);
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            id--;
+        }
+    }
+}
+
+
+</code></pre><h5 id="ReentrantLock"><a href="#ReentrantLock" class="headerlink" title="ReentrantLock"></a>ReentrantLock</h5><p>ReentrantLock锁在同一个时间点只能被一个线程锁持有；而可重入的意思是，ReentrantLock锁，可以被单个线程多次获取。<br>ReentrantLock分为“公平锁”和“非公平锁”。它们的区别体现在获取锁的机制上是否公平。“锁”是为了保护竞争资源，防止多个线程同时操作线程而出错，ReentrantLock在同一个时间点只能被一个线程获取(当某线程获取到“锁”时，其它线程就必须等待)；ReentraantLock是通过一个FIFO的等待队列来管理获取该锁所有线程的。在“公平锁”的机制下，线程依次排队获取锁；而“非公平锁”在锁是可获取状态时，不管自己是不是在队列的开头都会获取锁。<br>主要方法：</p>
+<ul>
+<li>lock()获得锁</li>
+<li>lockInterruptibly()获得锁，但优先响应中断</li>
+<li>tryLock()尝试获得锁，成功返回true,否则false，该方法不等待，立即返回</li>
+<li>tryLock(long time,TimeUnit unit)在给定时间内尝试获得锁</li>
+<li>unlock()释放锁</li>
+</ul>
+<p>Condition：await()、signal()方法分别对应之前的Object的wait()和notify()</p>
+<ul>
+<li>和重入锁一起使用</li>
+<li>await()是当前线程等待同时释放锁</li>
+<li>awaitUninterruptibly()不会在等待过程中响应中断</li>
+<li>signal()用于唤醒一个在等待的线程，还有对应的singalAll()方法</li>
+</ul>
+<h4 id="四-线程间通信"><a href="#四-线程间通信" class="headerlink" title="四 .线程间通信"></a>四 .线程间通信</h4><p>多个线程并发执行时, 在默认情况下 CPU 是随机性的在线程之间进行切换的，但是有时<br>候我们希望它们能有规律的执行, 那么，多线程之间就需要一些协调通信来改变或控制 CPU<br>的随机性。Java 提供了等待唤醒机制来解决这个问题，具体来说就是多个线程依靠一个同步<br>锁，然后借助于 wait()和 notify()方法就可以实现线程间的协调通信。<br>同步锁相当于中间人的作用，多个线程必须用同一个同步锁(认识同一个中间人)，只有<br>同一个锁上的被等待的线程，才可以被持有该锁的另一个线程唤醒，使用不同锁的线程之间<br>不能相互唤醒，也就无法协调通信。</p>
+<pre><code>wait();该线程等待,让下个线程执行
+
+notify();通知下个线程执行
+
+在调用 wait 和 notify 方法时，当前线程必须已经持有锁，然后才可以
+调用，否则将会抛出 IllegalMonitorStateException 异常。
+</code></pre><pre><code class="java">public class Lock {
+// 锁(保证为同一个锁)
+public static Object o=new Object();
+}
+
+package com.moujiangyong;
+
+public class Thread4 extends Thread {
+    @Override
+    public void run() {
+        for(int i=1;i&lt;11;i++){
+            synchronized (Clock.o){
+                System.out.println(&quot;1&quot;);
+                Clock.o.notify();
+                try {
+                    Clock.o.wait(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+    }
+}
+
+package com.moujiangyong;
+
+public class Thread5 extends Thread {
+    @Override
+    public void run() {
+        for(int i=1;i&lt;11;i++){
+            synchronized (Clock.o){
+                System.out.println(&quot;2&quot;);
+                Clock.o.notify();
+                try {
+                    Clock.o.wait(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+    }
+}
+
+
+</code></pre>
+<h4 id="五-BIO-阻塞编程"><a href="#五-BIO-阻塞编程" class="headerlink" title="五 .BIO:阻塞编程"></a>五 .BIO:阻塞编程</h4><p>$$<br>//BIO 服务器端程序<br>public class TCPServer {<br>public static void main(String[] args) throws Exception {<br>//1.创建 ServerSocket 对象<br>ServerSocket ss=new ServerSocket(9999);<br>while (true) {<br>//2.监听客户端<br>Socket s = ss.accept(); //阻塞<br>//3.从连接中取出输入流来接收消息<br>InputStream is = s.getInputStream(); //阻塞<br>byte[] b = new byte[10];<br>is.read(b);<br>String clientIP = s.getInetAddress().getHostAddress();<br>System.out.println(clientIP + “说:” + new String(b).trim());<br>//4.从连接中取出输出流并回话<br>OutputStream os = s.getOutputStream();<br>os.write(“没钱”.getBytes());<br>//5.关闭</p>
+<p>s.close();<br>}<br>}<br>$$</p>
+<pre><code class="java">//BIO 服务器端程序
+public class TCPServer {
+public static void main(String[] args) throws Exception {
+//1.创建 ServerSocket 对象
+ServerSocket ss=new ServerSocket(9999);
+while (true) {
+//2.监听客户端
+Socket s = ss.accept(); //阻塞
+//3.从连接中取出输入流来接收消息
+InputStream is = s.getInputStream(); //阻塞
+byte[] b = new byte[10];
+is.read(b);
+String clientIP = s.getInetAddress().getHostAddress();
+System.out.println(clientIP + &quot;说:&quot; + new String(b).trim());
+//4.从连接中取出输出流并回话
+OutputStream os = s.getOutputStream();
+os.write(&quot;没钱&quot;.getBytes());
+//5.关闭
+s.close();
+}
+}
+}
+
+
+public class TCPClient {
+public static void main(String[] args) throws Exception {
+while (true) {
+//1.创建 Socket 对象
+Socket s = new Socket(&quot;127.0.0.1&quot;, 9999);
+//2.从连接中取出输出流并发消息
+OutputStream os = s.getOutputStream();
+System.out.println(&quot;请输入:&quot;);
+Scanner sc = new Scanner(System.in);
+String msg = sc.nextLine();
+os.write(msg.getBytes());
+//3.从连接中取出输入流并接收回话
+InputStream is = s.getInputStream(); //阻塞
+byte[] b = new byte[20];
+is.read(b);
+System.out.println(&quot;老板说:&quot; + new String(b).trim());
+//4.关闭
+s.close();
+}
+}
+}
+</code></pre>
+<h4 id="六-NIO-非阻编程"><a href="#六-NIO-非阻编程" class="headerlink" title="六 .NIO:非阻编程"></a>六 .NIO:非阻编程</h4><p>NIO 和 BIO 有着相同的目的和作用，但是它们的实现方式完全不同，BIO 以流的方式处<br>理数据,而 NIO 以块的方式处理数据,块 I/O 的效率比流 I/O 高很多。另外，NIO 是非阻塞式的，<br>这一点跟 BIO 也很不相同，使用它可以提供非阻塞式的高伸缩性网络。</p>
+<p>NIO 主要有三大核心部分：Channel(通道)，Buffer(缓冲区), Selector(选择器)。传统的 BIO<br>基于字节流和字符流进行操作，而 NIO 基于 Channel(通道)和 Buffer(缓冲区)进行操作，数据<br>总是从通道读取到缓冲区中，或者从缓冲区写入到通道中。Selector(选择区)用于监听多个通<br>道的事件（比如：连接请求，数据到达等），因此使用单个线程就可以监听多个客户端通道。</p>
+<h5 id="缓冲区（Buffer）："><a href="#缓冲区（Buffer）：" class="headerlink" title="缓冲区（Buffer）："></a>缓冲区（Buffer）：</h5><p>实际上是一个容器，是一个特殊的数组，缓冲区对象内置了一些机<br>制，能够跟踪和记录缓冲区的状态变化情况。Channel 提供从文件、网络读取数据的渠道，<br>但是读取或写入的数据都必须经由 Buffer</p>
+<pre><code class="java">在 NIO 中，Buffer 是一个顶层父类，它是一个抽象类，常用的 Buffer 子类有：
+ ByteBuffer，存储字节数据到缓冲区
+ ShortBuffer，存储字符串数据到缓冲区
+传智播客
+北京市昌平区建材城西路金燕龙办公楼一层 电话：400-618-9090
+ CharBuffer，存储字符数据到缓冲区
+ IntBuffer，存储整数数据到缓冲区
+ LongBuffer，存储长整型数据到缓冲区
+ DoubleBuffer，存储小数到缓冲区
+ FloatBuffer，存储小数到缓冲区
+对于 Java 中的基本数据类型，都有一个 Buffer 类型与之相对应，最常用的自然是
+ByteBuffer 类（二进制数据），该类的主要方法如下所示：
+ public abstract ByteBuffer put(byte[] b); 存储字节数据到缓冲区
+ public abstract byte[] get(); 从缓冲区获得字节数据
+ public final byte[] array(); 把缓冲区数据转换成字节数组
+ public static ByteBuffer allocate(int capacity); 设置缓冲区的初始容量
+ public static ByteBuffer wrap(byte[] array); 把一个现成的数组放到缓冲区中使用
+ public final Buffer flip(); 翻转缓冲区，重置位置到初始位置
+</code></pre>
+<h5 id="通道（Channel）："><a href="#通道（Channel）：" class="headerlink" title="通道（Channel）："></a>通道（Channel）：</h5><p>类似于 BIO 中的 stream，例如 FileInputStream 对象，用来建立到目<br>标（文件，网络套接字，硬件设备等）的一个连接，但是需要注意：BIO 中的 stream 是单向<br>的，例如 FileInputStream 对象只能进行读取数据的操作，而 NIO 中的通道(Channel)是双向的，<br>既可以用来进行读操作，也可以用来进行写操作。常用的 Channel 类有：FileChannel、<br>DatagramChannel、ServerSocketChannel 和 SocketChannel。FileChannel 用于文件的数据读写，<br>DatagramChannel 用于 UDP 的数据读写，ServerSocketChannel 和 SocketChannel 用于 TCP 的<br>数据读写。</p>
+<pre><code class="java">这里我们先讲解 FileChannel 类，该类主要用来对本地文件进行 IO 操作，主要方法如下所示：
+ public int read(ByteBuffer dst) ，从通道读取数据并放到缓冲区中
+ public int write(ByteBuffer src) ，把缓冲区的数据写到通道中
+ public long transferFrom(ReadableByteChannel src, long position, long count)，从目标通道
+中复制数据到当前通道
+ public long transferTo(long position, long count, WritableByteChannel target)，把数据从当
+前通道复制给目标通道
+</code></pre>
+<h5 id="选择器-Selector"><a href="#选择器-Selector" class="headerlink" title="选择器(Selector) :"></a>选择器(Selector) :</h5><p>能够检测多个注册的通道上是否有事件发生，如果有事件发生，便获<br>取事件然后针对每个事件进行相应的处理。这样就可以只用一个单线程去管理多个通道，也<br>就是管理多个连接。这样使得只有在连接真正有读写事件发生时，才会调用函数来进行读写，<br>就大大地减少了系统开销，并且不必为每个连接都创建一个线程，不用去维护多个线程，并<br>且避免了多线程之间的上下文切换导致的开销。</p>
+<pre><code class="java">该类的常用方法如下所示：
+ public static Selector open()，得到一个选择器对象
+ public int select(long timeout)，监控所有注册的通道，当其中有 IO 操作可以进行时，将
+对应的 SelectionKey 加入到内部集合中并返回，参数用来设置超时时间
+ public Set&lt;SelectionKey&gt; selectedKeys()，从内部集合中得到所有的 SelectionKey
+2. SelectionKey，代表了 Selector 和网络通道的注册关系,一共四种：
+ int OP_ACCEPT：有新的网络连接可以 accept，值为 16
+ int OP_CONNECT：代表连接已经建立，值为 8
+ int OP_READ 和 int OP_WRITE：代表了读、写操作，值为 1 和 4
+该类的常用方法如下所示：
+ public abstract Selector selector()，得到与之关联的 Selector 对象
+ public abstract SelectableChannel channel()，得到与之关联的通道
+ public final Object attachment()，得到与之关联的共享数据
+ public abstract SelectionKey interestOps(int ops)，设置或改变监听事件
+ public final boolean isAcceptable()，是否可以 accept
+ public final boolean isReadable()，是否可以读
+ public final boolean isWritable()，是否可以写
+3. ServerSocketChannel，用来在服务器端监听新的客户端 Socket 连接，常用方法如下所示：
+ public static ServerSocketChannel open()，得到一个 ServerSocketChannel 通道
+ public final ServerSocketChannel bind(SocketAddress local)，设置服务器端端口号
+
+ public final SelectableChannel configureBlocking(boolean block)，设置阻塞或非阻塞模式，
+取值 false 表示采用非阻塞模式
+ public SocketChannel accept()，接受一个连接，返回代表这个连接的通道对象
+ public final SelectionKey register(Selector sel, int ops)，注册一个选择器并设置监听事件
+4. SocketChannel，网络 IO 通道，具体负责进行读写操作。NIO 总是把缓冲区的数据写入通
+道，或者把通道里的数据读到缓冲区。常用方法如下所示：
+ public static SocketChannel open()，得到一个 SocketChannel 通道
+ public final SelectableChannel configureBlocking(boolean block)，设置阻塞或非阻塞模式，
+取值 false 表示采用非阻塞模式
+ public boolean connect(SocketAddress remote)，连接服务器
+ public boolean finishConnect()，如果上面的方法连接失败，接下来就要通过该方法完成
+连接操作
+ public int write(ByteBuffer src)，往通道里写数据
+ public int read(ByteBuffer dst)，从通道里读数据
+ public final SelectionKey register(Selector sel, int ops, Object att)，注册一个选择器并设置
+监听事件，最后一个参数可以设置共享数据
+ public final void close()，关闭通道
+</code></pre>
+<h4 id="七-Netty框架使用"><a href="#七-Netty框架使用" class="headerlink" title="七 .Netty框架使用"></a>七 .Netty框架使用</h4><h5 id="ChannelHandler-处理对应事件"><a href="#ChannelHandler-处理对应事件" class="headerlink" title="ChannelHandler:处理对应事件"></a>ChannelHandler:处理对应事件</h5><pre><code class="Java">常用:
+ChannelInboundHandlerAdapter:接受到的数据需要做数据处理,
+SimpleChannelInboundHandler&lt;TextWebSocketFrame&gt;:接受到的数据不需要处理,需要在Pipeline中配置解码器,并且接受数据方法为:channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame msg)
+</code></pre>
+<h5 id="ChannelPipeline-负责处理和拦截-inbound-或者-outbound-的事-件和操作"><a href="#ChannelPipeline-负责处理和拦截-inbound-或者-outbound-的事-件和操作" class="headerlink" title="ChannelPipeline :负责处理和拦截 inbound 或者 outbound 的事 件和操作"></a>ChannelPipeline :负责处理和拦截 inbound 或者 outbound 的事 件和操作</h5><pre><code class="Java">pipeline.addLast(new HttpServerCodec());//添加HTTP协议的编码解码器
+pipeline.addLast(new ChatHandler());//添加自定义业务处理逻辑
+</code></pre>
+<h5 id="ChannelHandlerContext-事-件-处-理-器-上-下-文-对-象-，-Pipeline-链-中-的-实-际-处-理-节-点-。"><a href="#ChannelHandlerContext-事-件-处-理-器-上-下-文-对-象-，-Pipeline-链-中-的-实-际-处-理-节-点-。" class="headerlink" title="ChannelHandlerContext : 事 件 处 理 器 上 下 文 对 象 ， Pipeline 链 中 的 实 际 处 理 节 点 。"></a>ChannelHandlerContext : 事 件 处 理 器 上 下 文 对 象 ， Pipeline 链 中 的 实 际 处 理 节 点 。</h5><pre><code class="Java">ctx.channel()://当前通道对象
+ctx.channel().id();//当前通道对象的ID
+</code></pre>
+<h5 id="ServerBootstrap-和-Bootstrap"><a href="#ServerBootstrap-和-Bootstrap" class="headerlink" title="ServerBootstrap 和 Bootstrap"></a>ServerBootstrap 和 Bootstrap</h5><p>ServerBootstrap 是 Netty 中的服务器端启动助手，通过它可以完成服务器端的各种配置；</p>
+<p>Bootstrap 是 Netty 中的客户端启动助手， 通过它可以完成客户端的各种配置。  </p>
+<h5 id="ChannelOption-设置-ChannelOption-参数"><a href="#ChannelOption-设置-ChannelOption-参数" class="headerlink" title="ChannelOption:设置 ChannelOption 参数"></a>ChannelOption:设置 ChannelOption 参数</h5><p>ChannelOption.SO_BACKLOG</p>
+<p>ChannelOption.SO_KEEPALIVE ， 一直保持连接活动状态。 </p>
+<h5 id="ChannelFuture"><a href="#ChannelFuture" class="headerlink" title="ChannelFuture"></a>ChannelFuture</h5><p> 表示 Channel 中异步 I/O 操作的结果， 在 Netty 中所有的 I/O 操作都是异步的， I/O 的调</p>
+<p>用会直接返回， 调用者并不能立刻获得结果， 但是可以通过 ChannelFuture 来获取 I/O 操作<br>的处理状态 </p>
+<h5 id="NioEventLoopGroup-线程池组"><a href="#NioEventLoopGroup-线程池组" class="headerlink" title="NioEventLoopGroup :线程池组"></a>NioEventLoopGroup :线程池组</h5><pre><code class="java">ackage com.log9mjy;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.util.CharsetUtil;
+
+//服务端消息处理类
+public class NettyServerHandler extends ChannelInboundHandlerAdapter {
+    //读取数据事件
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        System.out.println(&quot;Server:&quot;+ctx);
+        ByteBuf buf=(ByteBuf) msg;
+        System.out.println(&quot;客户端发送的消息为&quot;+buf.toString(CharsetUtil.UTF_8));
+    }
+
+    //读取数据完成事件
+    @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+        ctx.writeAndFlush(Unpooled.copiedBuffer(&quot;没钱啊&quot;,CharsetUtil.UTF_8));
+    }
+
+    //异常发生事件
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        System.out.println(&quot;发送异常&quot;);
+        ctx.close();
+    }
+}
+</code></pre>
+<pre><code class="java">package com.log9mjy;
+
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+
+public class NettyServer {
+
+    public static void main(String[] args) throws InterruptedException {
+        //创建一个线程组,接受客户端连接
+        EventLoopGroup bossGroup = new NioEventLoopGroup();
+        //创建一个线程组,处理网络操作
+        EventLoopGroup workGroup = new NioEventLoopGroup();
+        //创建服务端启动助手配置参数
+        ServerBootstrap b = new ServerBootstrap();
+        b.group(bossGroup, workGroup)//设置两个线程组
+                .channel(NioServerSocketChannel.class)//使用NioServerSocketChannel作为服务器端通道的实现
+                .option(ChannelOption.SO_BACKLOG, 128) //设置线程队列中等待连接的个数
+                .childOption(ChannelOption.SO_KEEPALIVE, true) //保持活动连接状态
+                .childHandler(new ChannelInitializer&lt;SocketChannel&gt;() {   //创建一个通道初始化对象
+                    public void initChannel(SocketChannel sc) {   //往Pipeline链中添加自定义的handler类
+                        sc.pipeline().addLast(new NettyServerHandler());
+                    }
+                });
+
+        System.out.println(&quot;......Server is ready......&quot;);
+        ChannelFuture cf=b.bind(9999).sync();  //绑定端口 bind方法是异步的  sync方法是同步阻塞的
+        System.out.println(&quot;......Server is starting......&quot;);
+
+        //关闭通道，关闭线程组
+        cf.channel().closeFuture().sync(); //异步
+        bossGroup.shutdownGracefully();
+        workGroup.shutdownGracefully();
+    }
+}
+</code></pre>
+<pre><code class="java">package com.log9mjy;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.util.CharsetUtil;
+
+public class NettyClientHandler extends ChannelInboundHandlerAdapter {
+    //通道就绪事件
+    public void channelActive(ChannelHandlerContext ctx){
+        System.out.println(&quot;Client:&quot;+ctx);
+        ctx.writeAndFlush(Unpooled.copiedBuffer(&quot;老板，还钱吧&quot;, CharsetUtil.UTF_8));
+    }
+
+    //读取数据事件
+    public void channelRead(ChannelHandlerContext ctx,Object msg){
+        ByteBuf buf=(ByteBuf) msg;
+        System.out.println(&quot;服务器端发来的消息：&quot;+buf.toString(CharsetUtil.UTF_8));
+    }
+
+}
+</code></pre>
+<pre><code class="java">package com.log9mjy;
+
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+
+public class NettyClient {
+    public static void main(String[] args) throws  Exception{
+
+        //1. 创建一个线程组
+        EventLoopGroup group=new NioEventLoopGroup();
+        //2. 创建客户端的启动助手，完成相关配置
+        Bootstrap b=new Bootstrap();
+        b.group(group)  //3. 设置线程组
+                .channel(NioSocketChannel.class)  //4. 设置客户端通道的实现类
+                .handler(new ChannelInitializer&lt;SocketChannel&gt;() {  //5. 创建一个通道初始化对象
+                    @Override
+                    protected void initChannel(SocketChannel socketChannel) throws Exception {
+                        socketChannel.pipeline().addLast(new NettyClientHandler()); //6.往Pipeline链中添加自定义的handler
+                    }
+                });
+        System.out.println(&quot;......Client is  ready......&quot;);
+
+        //7.启动客户端去连接服务器端  connect方法是异步的   sync方法是同步阻塞的
+        ChannelFuture cf=b.connect(&quot;127.0.0.1&quot;,9999).sync();
+
+        //8.关闭连接(异步非阻塞)
+        cf.channel().closeFuture().sync();
+
+    }
+}
+</code></pre>
+<h4 id="八-springboot异步执行"><a href="#八-springboot异步执行" class="headerlink" title="八 .springboot异步执行"></a>八 .springboot异步执行</h4><p>1.在启动类上@EnableAsync //开启异步调用</p>
+<p>2.在需要异步执行的方法上@Async</p>
+<h4 id="九-ThreadLocal线程中变量"><a href="#九-ThreadLocal线程中变量" class="headerlink" title="九 .ThreadLocal线程中变量"></a>九 .ThreadLocal线程中变量</h4><p>ThreadLocal的实例代表了一个线程局部的变量，每条线程都只能看到自己的值，并不会意识到其它的线程中也存在该变量。</p>
+<p>它采用采用空间来换取时间的方式，解决多线程中相同变量的访问冲突问题。</p>
+<p>主要方法</p>
+<p>get()</p>
+<p>set(T value)</p>
+<p>remove()</p>
+<p>当在一个线程中存在ThreadLocal中一个对象,在该线程中其它地方中也能获得该对象.可以理解redis缓存一个对象</p>
+<h4 id="十-ThreadPoolExecutor线程池"><a href="#十-ThreadPoolExecutor线程池" class="headerlink" title="十 .ThreadPoolExecutor线程池"></a>十 .ThreadPoolExecutor线程池</h4><p><strong>构造方法</strong></p>
+<pre><code>public ThreadPoolExecutor(int corePoolSize,
+                          int maximumPoolSize,
+                          long keepAliveTime,
+                          TimeUnit unit,
+                          BlockingQueue&lt;Runnable&gt; workQueue,
+                          ThreadFactory threadFactory,
+                          RejectedExecutionHandler handler) {
+    if (corePoolSize &lt; 0 ||
+        maximumPoolSize &lt;= 0 ||
+        maximumPoolSize &lt; corePoolSize ||
+        keepAliveTime &lt; 0)
+        throw new IllegalArgumentException();
+    if (workQueue == null || threadFactory == null || handler == null)
+        throw new NullPointerException();
+    this.acc = System.getSecurityManager() == null ?
+            null :
+            AccessController.getContext();
+    this.corePoolSize = corePoolSize;
+    this.maximumPoolSize = maximumPoolSize;
+    this.workQueue = workQueue;
+    this.keepAliveTime = unit.toNanos(keepAliveTime);
+    this.threadFactory = threadFactory;
+    this.handler = handler;
+}
+
+corePoolSize    核心线程池数量
+
+maximumPoolSize    最大线程池数量
+线程池执行器将会根据corePoolSize和maximumPoolSize自动地调整线程池大小。
+如果当前线程池任务线程数量小于核心线程池数量，执行器总是优先创建一个任务线程，而不是从线程队列中取一个空闲线程。
+如果当前线程池任务线程数量大于核心线程池数量，执行器总是优先从线程队列中取一个空闲线程，而不是创建一个任务线程。
+如果当前线程池任务线程数量大于核心线程池数量，且队列中无空闲任务线程，将会创建一个任务线程，直到超出maximumPoolSize,如果超时maximumPoolSize，则任务将会被拒绝。
+
+keepAliveTime   线程最大空闲时间
+如果线程池当前拥有超过corePoolSize的线程，那么多余的线程在空闲时间超过keepAliveTime时会被终止
+
+TimeUnit        时间单位
+
+BlockingQueue&lt;Runnable&gt; 线程等待队列
+
+ThreadFactory   线程创建工厂
+
+RejectedExecutionHandler  拒绝策略
+拒绝任务有两种情况：1. 线程池已经被关闭；2. 任务队列已满且maximumPoolSizes已满；
+4种策略
+AbortPolicy：默认测策略，抛出RejectedExecutionException运行时异常；
+
+CallerRunsPolicy：这提供了一个简单的反馈控制机制，可以减慢提交新任务的速度；
+
+DiscardPolicy：直接丢弃新提交的任务；
+
+DiscardOldestPolicy：如果执行器没有关闭，队列头的任务将会被丢弃，然后执行器重新尝试执行任务（如果失败，则重复这一过程）；
+我们可以自己定义RejectedExecutionHandler，以适应特殊的容量和队列策略场景中。
+</code></pre><h5 id="创建线程池"><a href="#创建线程池" class="headerlink" title="创建线程池"></a>创建线程池</h5><p>可以使用Executors去创建线程池,已经匹配了一些方案.例:Executors.newFixedThreadPool()</p>
+<pre><code>可以使用Executors去创建线程池,已经匹配了一些方案
+newCachedThreadPool     创建一个可缓存线程池，如果线程池长度超过处理需要，可灵活回收空闲线程，若无可回收，则新建线程。 
+newFixedThreadPool      创建一个定长线程池，可控制线程最大并发数，超出的线程会在队列中等待。 
+newScheduledThreadPool  创建一个定长线程池，支持定时及周期性任务执行。 
+newSingleThreadExecutor 创建一个单线程化的线程池，它只会用唯一的工作线程来执行任务，保证所有任务按照指定顺序(FIFO, LIFO, 优先级)执行
+</code></pre><p><strong>FixedThreadPool</strong>     创建一个定长线程池，可控制线程最大并发数，超出的线程会在队列中等待。</p>
+<pre><code class="java">   public static ExecutorService newFixedThreadPool(int nThreads) {
+        return new ThreadPoolExecutor(nThreads, nThreads,
+                                      0L, TimeUnit.MILLISECONDS,
+                                      new LinkedBlockingQueue&lt;Runnable&gt;());
+    }
+</code></pre>
+<p>corePoolSize与maximumPoolSize相等，即其线程全为核心线程，是一个固定大小的线程池，是其优势；</p>
+<p>keepAliveTime = 0 该参数默认对核心线程无效，而FixedThreadPool全部为核心线程；</p>
+<p>workQueue 为LinkedBlockingQueue（无界阻塞队列），队列最大值为Integer.MAX_VALUE。如果任务提交速度持续大余任务处理速度，会造成队列大量阻塞。因为队列很大，很有可能在拒绝策略前，内存溢出。是其劣势；</p>
+<p>FixedThreadPool的任务执行是无序的；</p>
+<p>适用场景：可用于Web服务瞬时削峰，但需注意长时间持续高峰情况造成的队列阻塞。</p>
+<p><strong>CachedThreadPool</strong>    创建一个可缓存线程池，如果线程池长度超过处理需要，可灵活回收空闲线程，若无可回收，则新建线程。 </p>
+<pre><code class="java">     public static ExecutorService newCachedThreadPool() {
+        return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                                      60L, TimeUnit.SECONDS,
+                                      new SynchronousQueue&lt;Runnable&gt;());
+    }
+</code></pre>
+<blockquote>
+<ul>
+<li>corePoolSize = 0，maximumPoolSize = Integer.MAX_VALUE，即线程数量几乎无限制；</li>
+<li>keepAliveTime = 60s，线程空闲60s后自动结束。</li>
+<li>workQueue 为 SynchronousQueue 同步队列，这个队列类似于一个接力棒，入队出队必须同时传递，因为CachedThreadPool线程创建无限制，不会有队列等待，所以使用SynchronousQueue；</li>
+</ul>
+</blockquote>
+<p>适用场景：快速处理大量耗时较短的任务，如Netty的NIO接受请求时，可使用CachedThreadPool。</p>
+<p><strong>SingleThreadExecutor</strong>     创建一个单线程化的线程池，它只会用唯一的工作线程来执行任务，保证所有任务按照指定顺序(FIFO, LIFO, 优先级)执行</p>
+<pre><code>    public static ExecutorService newSingleThreadExecutor() {
+        return new FinalizableDelegatedExecutorService
+            (new ThreadPoolExecutor(1, 1,
+                                    0L, TimeUnit.MILLISECONDS,
+                                    new LinkedBlockingQueue&lt;Runnable&gt;()));
+    }
+</code></pre><p>咋一瞅，不就是newFixedThreadPool(1)吗？定眼一看，这里多了一层FinalizableDelegatedExecutorService包装，这一层有什么用呢，写个dome来解释一下：</p>
+<pre><code>    public static void main(String[] args) {
+        ExecutorService fixedExecutorService = Executors.newFixedThreadPool(1);
+        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) fixedExecutorService;
+        System.out.println(threadPoolExecutor.getMaximumPoolSize());
+        threadPoolExecutor.setCorePoolSize(8);
+
+        ExecutorService singleExecutorService = Executors.newSingleThreadExecutor();
+//      运行时异常 java.lang.ClassCastException
+//      ThreadPoolExecutor threadPoolExecutor2 = (ThreadPoolExecutor) singleExecutorService;
+    }
+</code></pre><p>对比可以看出，FixedThreadPool可以向下转型为ThreadPoolExecutor，并对其线程池进行配置，而SingleThreadExecutor被包装后，无法成功向下转型。因此，SingleThreadExecutor被定以后，无法修改，做到了真正的Single。</p>
+<p><strong>ScheduledThreadPool </strong>   创建一个定长线程池，支持定时及周期性任务执行。 </p>
+<pre><code>    public static ScheduledExecutorService newScheduledThreadPool(int corePoolSize) {
+        return new ScheduledThreadPoolExecutor(corePoolSize);
+    }
+</code></pre><p>newScheduledThreadPool调用的是ScheduledThreadPoolExecutor的构造方法，而ScheduledThreadPoolExecutor继承了ThreadPoolExecutor，构造是还是调用了其父类的构造方法。</p>
+<pre><code>    public ScheduledThreadPoolExecutor(int corePoolSize) {
+        super(corePoolSize, Integer.MAX_VALUE, 0, NANOSECONDS,
+              new DelayedWorkQueue());
+    }
+</code></pre><p><strong>SingleThreadScheduledExecutor 使用线程实现定时刷新</strong></p>
+<pre><code>public class ScheduledExecutorServiceTest {
+    public static void main(String[] args) {
+        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+        executorService.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(&quot;run &quot;+ System.currentTimeMillis());
+            }
+        }, 0, 100, TimeUnit.MILLISECONDS);
+    }
+}
+</code></pre><h5 id="Atomicxxxx-多线程环境下，具有排他性"><a href="#Atomicxxxx-多线程环境下，具有排他性" class="headerlink" title="Atomicxxxx:多线程环境下，具有排他性"></a>Atomicxxxx:多线程环境下，具有排他性</h5><p>compareAndSet(boolean expect, boolean update)  比较AtomicBoolean和expect的值，如果一致，返回true,并且值为update</p>
+<pre><code>package zmx.atomic.test;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+public class BarWorker2 implements Runnable {
+
+    private static AtomicBoolean exists = new AtomicBoolean(false);  
+
+
+     private String name;  
+
+     public BarWorker2(String name) {   
+          this.name = name;  
+     }  
+
+     @Override  
+     public void run() {   
+         if (exists.compareAndSet(false, true)) {  
+
+             System.out.println(name + &quot; enter&quot;);  
+             try {  
+                  System.out.println(name + &quot; working&quot;);  
+                  TimeUnit.SECONDS.sleep(2);  
+             } catch (InterruptedException e) {  
+                  // do nothing  
+             }  
+             System.out.println(name + &quot; leave&quot;);  
+             exists.set(false);    
+        } else {  
+             System.out.println(name + &quot; give up&quot;);  
+        }  
+
+    } 
+
+
+     public static void main(String[] args) {
+
+         BarWorker2 bar1 = new BarWorker2(&quot;bar1&quot;);
+         BarWorker2 bar2 = new BarWorker2(&quot;bar2&quot;);
+         new Thread(bar1).start();
+         new Thread(bar2).start();
+
+    }
+
+
+}
+执行结果如下：
+
+bar1 enter
+bar1 working
+bar2 give up
+bar1 leave
+</code></pre><h5 id="CountDownLatch-用于多线程全部执行完毕"><a href="#CountDownLatch-用于多线程全部执行完毕" class="headerlink" title="CountDownLatch:用于多线程全部执行完毕"></a>CountDownLatch:用于多线程全部执行完毕</h5><p><a href="https://zapldy.iteye.com/blog/746458" target="_blank" rel="noopener">https://zapldy.iteye.com/blog/746458</a></p>
+<h5 id="多线程成员变量共享-局部变量不共享-成员变量存在线程安全问题"><a href="#多线程成员变量共享-局部变量不共享-成员变量存在线程安全问题" class="headerlink" title="多线程成员变量共享,局部变量不共享,成员变量存在线程安全问题"></a>多线程成员变量共享,局部变量不共享,成员变量存在线程安全问题</h5><h4 id="十一-i-i-1的解释"><a href="#十一-i-i-1的解释" class="headerlink" title="十一 .i=i+1的解释"></a>十一 .i=i+1的解释</h4><ul>
+<li>单线程:当线程执行这个语句时，会先从主存当中读取i的值，然后复制一份到高速缓存当中，然后CPU执行指令对i进行加1操作，然后将数据写入高速缓存，最后将高速缓存中i最新的值刷新到主存当中。</li>
+<li>多线程:初始时，两个线程分别读取i的值存入各自所在的CPU的高速缓存当中，然后线程1进行加1操作，然后把i的最新值1写入到内存。此时线程2的高速缓存当中i的值还是0，进行加1操作之后，i的值为1，然后线程2把i的值写入内存。</li>
+</ul>
+<h4 id="十二-RateLimiter限流使用"><a href="#十二-RateLimiter限流使用" class="headerlink" title="十二   RateLimiter限流使用"></a>十二   RateLimiter限流使用</h4><p>RateLimiter 从概念上来讲，速率限制器会在可配置的速率下分配许可证。如果必要的话，每个acquire() 会阻塞当前线程直到许可证可用后获取该许可证。一旦获取到许可证，不需要再释放许可证。</p>
+<p>RateLimiter使用的是一种叫令牌桶的流控算法，RateLimiter会按照一定的频率往桶里扔令牌，线程拿到令牌才能执行，比如你希望自己的应用程序QPS不要超过1000，那么RateLimiter设置1000的速率后，就会每秒往桶里扔1000个令牌。</p>
+<pre><code>private RateLimiter limiter=RateLimiter.create(1D);//创建对象,每秒1许可数的频率
+boolean b = limiter.tryAcquire();//从RateLimiter 获取许可，如果该许可可以在无延迟下的情况下立即获取得到的话
+</code></pre></div><div class="post-copyright"><blockquote><p>原文作者: mjy</p><p>原文链接: <a href="http://blog.moujiangyong.com/2017/05/12/线程/">http://blog.moujiangyong.com/2017/05/12/线程/</a></p><p>版权声明: 转载请注明出处(必须保留作者署名及链接)</p></blockquote></div><div class="tags"></div><div class="post-share"><div class="social-share"><span>分享到:</span></div></div><div class="post-nav"><a href="/2017/11/01/搭建自己的博客/" class="pre">搭建自己的博客</a><a href="/2017/01/12/笔记/" class="next">小小的知识点</a></div><div id="comments"></div></div></div></div><div class="layout-r"><div id="sidebar"><div class="search-pla"></div><div id="toc" class="widget"><div class="widget-title"><i class="fa fa-fei">文章目录</i></div><ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#一-JAVA内存模型"><span class="toc-text">一  .JAVA内存模型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#二-创建线程的两个方法"><span class="toc-text">二 .创建线程的两个方法</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#创建类继承Thread"><span class="toc-text">创建类继承Thread</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#创建类实现Runnable"><span class="toc-text">创建类实现Runnable</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#三-线程安全问题"><span class="toc-text">三 .线程安全问题</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#ReentrantLock"><span class="toc-text">ReentrantLock</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#四-线程间通信"><span class="toc-text">四 .线程间通信</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#五-BIO-阻塞编程"><span class="toc-text">五 .BIO:阻塞编程</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#六-NIO-非阻编程"><span class="toc-text">六 .NIO:非阻编程</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#缓冲区（Buffer）："><span class="toc-text">缓冲区（Buffer）：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#通道（Channel）："><span class="toc-text">通道（Channel）：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#选择器-Selector"><span class="toc-text">选择器(Selector) :</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#七-Netty框架使用"><span class="toc-text">七 .Netty框架使用</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#ChannelHandler-处理对应事件"><span class="toc-text">ChannelHandler:处理对应事件</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#ChannelPipeline-负责处理和拦截-inbound-或者-outbound-的事-件和操作"><span class="toc-text">ChannelPipeline :负责处理和拦截 inbound 或者 outbound 的事 件和操作</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#ChannelHandlerContext-事-件-处-理-器-上-下-文-对-象-，-Pipeline-链-中-的-实-际-处-理-节-点-。"><span class="toc-text">ChannelHandlerContext : 事 件 处 理 器 上 下 文 对 象 ， Pipeline 链 中 的 实 际 处 理 节 点 。</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#ServerBootstrap-和-Bootstrap"><span class="toc-text">ServerBootstrap 和 Bootstrap</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#ChannelOption-设置-ChannelOption-参数"><span class="toc-text">ChannelOption:设置 ChannelOption 参数</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#ChannelFuture"><span class="toc-text">ChannelFuture</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#NioEventLoopGroup-线程池组"><span class="toc-text">NioEventLoopGroup :线程池组</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#八-springboot异步执行"><span class="toc-text">八 .springboot异步执行</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#九-ThreadLocal线程中变量"><span class="toc-text">九 .ThreadLocal线程中变量</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#十-ThreadPoolExecutor线程池"><span class="toc-text">十 .ThreadPoolExecutor线程池</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#创建线程池"><span class="toc-text">创建线程池</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Atomicxxxx-多线程环境下，具有排他性"><span class="toc-text">Atomicxxxx:多线程环境下，具有排他性</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#CountDownLatch-用于多线程全部执行完毕"><span class="toc-text">CountDownLatch:用于多线程全部执行完毕</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#多线程成员变量共享-局部变量不共享-成员变量存在线程安全问题"><span class="toc-text">多线程成员变量共享,局部变量不共享,成员变量存在线程安全问题</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#十一-i-i-1的解释"><span class="toc-text">十一 .i=i+1的解释</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#十二-RateLimiter限流使用"><span class="toc-text">十二   RateLimiter限流使用</span></a></li></ol></div><div class="widget"><div class="widget-title"><i class="fa fa-xie"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/09/21/JVM 配置常用参数和常用 GC 调优策略(转)/">jvm常用配置(转)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/08/01/开源项目/">开源项目</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/07/02/Linux安装环境/">Linux安装环境</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/06/17/String/">String.format()方法的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/30/常用递归的使用/">常用递归的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/23/feign和restTemplate的使用/">okhttp,feign,restTemplate的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/21/Java虚拟机调优/">Java虚拟机调优</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/18/logback的使用/">springboot-logback的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/21/spring-cloud之权限/">spring-cloud之权限</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/01/spring-cloud之链路追踪/">spring-cloud之链路追踪</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-gui"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JVM/">JVM</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/http请求/">http请求</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/java8/">java8</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springboot/">springboot</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/springcloud/">springcloud</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/前端/">前端</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客/">博客</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/搜索引擎/">搜索引擎</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/笔记/">笔记</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/线程/">线程</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/递归/">递归</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/项目/">项目</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-biao"> 标签</i></div><div class="tagcloud"><a href="/tags/spring-cloud/" style="font-size: 15px;">spring cloud</a> <a href="/tags/资料/" style="font-size: 15px;">资料</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-archive"> 归档</i></div><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li></ul></div></div></div></div><a id="totop" href="#top"></a><div id="footer"><div class="footer-info"><p><a href="/baidusitemap.xml">网站地图</a> |  <a href="/atom.xml">订阅本站</a> |  <a href="/about/">联系博主</a></p><p>本站总访问量：<i id="busuanzi_container_site_pv"><i id="busuanzi_value_site_pv"></i></i>次，本站总访客数:<i id="busuanzi_container_site_uv"><i id="busuanzi_value_site_uv"></i></i>人</p><p><a href="https://beian.miit.gov.cn " rel="nofollow">蜀ICP备19003737号</a></p></div></div></div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><script type="text/javascript" src="/js/search.json.js?v=2.0.3"></script><script type="text/javascript" src="/js/toctotop.js?v=2.0.3" async></script><link rel="stylesheet" type="text/css" href="/share/css/share.css"><script type="text/javascript" src="/share/js/social-share.js" charset="utf-8"></script><script type="text/javascript" src="/share/js/qrcode.js" charset="utf-8"></script></body></html>
